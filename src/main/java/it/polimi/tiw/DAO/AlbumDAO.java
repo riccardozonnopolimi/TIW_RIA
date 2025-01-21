@@ -201,7 +201,7 @@ public class AlbumDAO {
  	    ResultSet result2 = null;
 
  	    try {
- 	        // ✅ Query per selezionare tutti gli album tranne quelli dell'utente specificato
+ 	        //  Query per selezionare tutti gli album tranne quelli dell'utente specificato
  	        String query1 = "SELECT a.*, u.username FROM album a JOIN user u ON a.creatore = u.id_user WHERE a.creatore <> ? ORDER BY a.data_creazione DESC";
  	        statement = connection.prepareStatement(query1);
  	        statement.setInt(1, id_user);
@@ -281,7 +281,7 @@ public class AlbumDAO {
  	    boolean alb = false;
 
  	    try {
- 	        String query1 = "SELECT * FROM album WHERE creatore = ? ORDER BY album.data_creazione DESC";
+ 	        String query1 = "SELECT a.*, u.username FROM album a JOIN user u ON a.creatore = u.id_user WHERE creatore = ? ORDER BY a.data_creazione DESC";
  	        statement = connection.prepareStatement(query1);
  	        statement.setInt(1, id_user);
  	        result = statement.executeQuery();
@@ -303,9 +303,11 @@ public class AlbumDAO {
  	            Timestamp data = result.getTimestamp("data_creazione");
  	            int totale_immagini = result.getInt("totale_immagini");
  	            int id_album = result.getInt("id_album");
+ 	            String username_proprietario = result.getString("username"); 
 
  	            album = new Album(id_album, titolo, id_user_proprietario, totale_immagini, data);
-
+ 	            album.setUsernameCreatore(username_proprietario);
+ 	           
  	            if (album.getTotale_immagini() > 0) {
  	                String query2 = "SELECT * FROM image_album WHERE id_alb = ?";
  	                statement2 = connection.prepareStatement(query2);

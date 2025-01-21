@@ -20,34 +20,26 @@ import javax.servlet.http.Part;
 import it.polimi.tiw.DAO.ImmagineDAO;
 import it.polimi.tiw.util.ConnectionHandler;
 
-/**
- * Servlet implementation class UploadPhoto
- */
 @WebServlet("/UploadPhoto")
 @MultipartConfig(
-	    fileSizeThreshold = 1024 * 1,  // 1KB
-	    maxFileSize = 1024 * 1024 * 10,      // 10MB
-	    maxRequestSize = 1024 * 1024 * 50    // 50MB
+    fileSizeThreshold = 1024 * 1,  // 1KB
+    maxFileSize = 1024 * 1024 * 10,  // 10MB
+    maxRequestSize = 1024 * 1024 * 50 // 50MB
 )
 public class UploadPhoto extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-	private Connection connection;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
+    private static final long serialVersionUID = 1L;
+    private Connection connection;
+
     public UploadPhoto() {
         super();
-        // TODO Auto-generated constructor stub
     }
-   
+
     @Override
     public void init() throws ServletException {
-
         ServletContext servletContext = getServletContext();
         this.connection = ConnectionHandler.getConnection(servletContext);
     }
-    
+
     @Override
     public void destroy() {
         try {
@@ -57,18 +49,17 @@ public class UploadPhoto extends HttpServlet {
         }
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		response.getWriter().append("Served at: ").append(request.getContextPath());
-	}
+    // GET => reindirizziamo a doPost
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // POST => Upload dell'immagine
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+            throws ServletException, IOException {
+
+        // Check sessione
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -79,19 +70,26 @@ public class UploadPhoto extends HttpServlet {
         String title = request.getParameter("title");
         String description = request.getParameter("description");
 
+        // Path locale in cui salvare fisicamente i file (modifica secondo necessità)
         String uploadPath = "/Users/riccardozonno/res_ria";
         File uploadDir = new File(uploadPath);
-        if (!uploadDir.exists()) uploadDir.mkdir();
+        if (!uploadDir.exists()) {
+            uploadDir.mkdir();
+        }
+
         Random random = new Random();
         int n = random.nextInt(1000000);
         String rand = Integer.toString(n);
 
         try {
             Part filePart = request.getPart("file");
-            String fileName = rand + Paths.get(filePart.getSubmittedFileName()).getFileName().toString();
+            String originalFilename = Paths.get(filePart.getSubmittedFileName())
+                                           .getFileName().toString();
+            String fileName = rand + originalFilename;
             String filePath = uploadDir + File.separator + fileName;
 
-            filePart.write(filePath); // Salva fisicamente l'immagine
+            // Salva fisicamente il file
+            filePart.write(filePath);
 
             File uploadedFile = new File(filePath);
             if (uploadedFile.exists()) {
@@ -99,17 +97,20 @@ public class UploadPhoto extends HttpServlet {
             } else {
                 System.err.println("Errore: il file non è stato scritto.");
             }
-            
+
+            // Path da salvare nel DB (un path "logico" o relativo)
             String dbPath = "/Users/riccardozonno/res_ria" + "/" + fileName;
+
             // Inserisci immagine nel database
             ImmagineDAO immagineDAO = new ImmagineDAO(connection);
             immagineDAO.insertImageData(title, description, dbPath, userId);
 
             response.setStatus(HttpServletResponse.SC_OK);
+
         } catch (Exception e) {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             e.printStackTrace();
         }
     }
-
 }
+

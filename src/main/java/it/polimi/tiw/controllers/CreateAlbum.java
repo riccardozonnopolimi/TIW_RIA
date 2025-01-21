@@ -8,36 +8,28 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
+import javax.servlet.http.HttpServletRequest;
 
 import it.polimi.tiw.DAO.AlbumDAO;
 import it.polimi.tiw.util.ConnectionHandler;
 
-/**
- * Servlet implementation class CreateAlbum
- */
 @WebServlet("/CreateAlbum")
 public class CreateAlbum extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-	private Connection connection;
-       
-    /**
-     * @see HttpServlet#HttpServlet()
-     */
+    private static final long serialVersionUID = 1L;
+    private Connection connection;
+
     public CreateAlbum() {
         super();
-        // TODO Auto-generated constructor stub
     }
-    
+
     @Override
     public void init() throws ServletException {
-
         ServletContext servletContext = getServletContext();
         this.connection = ConnectionHandler.getConnection(servletContext);
     }
-    
+
     @Override
     public void destroy() {
         try {
@@ -47,18 +39,18 @@ public class CreateAlbum extends HttpServlet {
         }
     }
 
-	/**
-	 * @see HttpServlet#doGet(HttpServletRequest request, HttpServletResponse response)
-	 */
-	protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doPost(request,response);
-	}
+    // GET => reindirizziamo a doPost
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        doPost(request, response);
+    }
 
-	/**
-	 * @see HttpServlet#doPost(HttpServletRequest request, HttpServletResponse response)
-	 */
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
+    // POST => crea un album
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -77,6 +69,7 @@ public class CreateAlbum extends HttpServlet {
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             e.printStackTrace();
         }
+        return;
     }
-
 }
+

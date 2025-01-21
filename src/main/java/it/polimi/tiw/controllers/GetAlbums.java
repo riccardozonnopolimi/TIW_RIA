@@ -10,23 +10,23 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
 
 import com.google.gson.Gson;
 
-import it.polimi.tiw.DAO.ImmagineDAO;
-import it.polimi.tiw.beans.Immagine;
-import it.polimi.tiw.beans.ImmagineData;
+import it.polimi.tiw.DAO.AlbumDAO;
+import it.polimi.tiw.beans.Album;
+import it.polimi.tiw.beans.AlbumData;
 import it.polimi.tiw.util.ConnectionHandler;
 
-@WebServlet("/GetImages")
-public class GetImages extends HttpServlet {
+@WebServlet("/GetAlbums")
+public class GetAlbums extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection = null;
 
-    public GetImages() {
+    public GetAlbums() {
         super();
     }
 
@@ -45,53 +45,57 @@ public class GetImages extends HttpServlet {
         }
     }
 
-    // GET => restituiamo l'elenco delle immagini dell'utente
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
+        // Controllo sessione
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
+        // Recupera userId
         int userId = (int) session.getAttribute("currentUserId");
 
-        ImmagineDAO immagineDAO = new ImmagineDAO(connection);
-        Immagine[] userImages;
+        // Esegui query per recuperare tutti gli album di quell'utente
+        AlbumDAO albumDAO = new AlbumDAO(connection);
+        Album[] userAlbums = null;
+
         try {
-            userImages = immagineDAO.getAllUserPhoto(userId);
+            // Metti un tuo metodo, ad es. "getAllUserAlbum2" o simile
+            userAlbums = albumDAO.getAllUserAlbum2(userId);
         } catch (SQLException e) {
+            // Errore DB => 500
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
 
-        // Convertiamo in array di ImmagineData
-        ImmagineData[] imagesData;
-        if (userImages == null) {
-            imagesData = new ImmagineData[0];
+        // Converti in array di AlbumData (per serializzare in JSON)
+        AlbumData[] userAlbumsData;
+        if (userAlbums == null) {
+            userAlbumsData = new AlbumData[0];
         } else {
-            imagesData = Arrays.stream(userImages)
-                               .map(ImmagineData::new)
-                               .toArray(ImmagineData[]::new);
+            userAlbumsData = Arrays.stream(userAlbums)
+                                   .map(AlbumData::new)
+                                   .toArray(AlbumData[]::new);
         }
 
-        // Serializziamo in JSON
+        // Serializza in JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
-        Gson gson = new Gson();
-        String json = gson.toJson(imagesData);
         PrintWriter out = response.getWriter();
-        out.print(json);
+        Gson gson = new Gson();
+        out.print(gson.toJson(userAlbumsData));
         out.flush();
     }
 
-    // Se preferisci POST => reindirizziamo a doGet
+    // Se la tua UI fa una GET, la doPost potresti mappare a doGet
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doGet(request, response);
     }
 }
+

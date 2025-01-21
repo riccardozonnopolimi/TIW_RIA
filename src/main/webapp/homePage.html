@@ -1,10 +1,72 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-<meta charset="UTF-8">
-<title>Insert title here</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="stylesheet" href="homePage.css">
+    <title>Home Page</title>
 </head>
 <body>
+    <!-- Bottone Logout -->
+    <button id="logoutBtn" class="btn-logout">Logout</button>
 
+    <!-- Titolo e sottotitolo -->
+    <div class="titles">
+        <h1 id="welcomeTitle">Welcome to your home, <span id="username"></span></h1>
+        <h2>Nice to see you again</h2>
+    </div>
+
+    <!-- Form di upload -->
+    <div class="upload-form">
+        <h3>Upload an Image</h3>
+        <form id="uploadForm">
+            <label for="title">Title:</label>
+            <input type="text" id="imageTitle" name="title" required>
+
+            <label for="description">Description:</label>
+            <textarea id="imageDescription" name="description" rows="3" required></textarea>
+
+            <label for="file">Select Image:</label>
+            <input type="file" id="imageFile" name="file" accept="image/*" required>
+
+            <button type="submit" class="btn-upload">Upload</button>
+        </form>
+    </div>
+
+    <!-- Galleria immagini -->
+    <div class="image-gallery">
+        <h3>Your Images</h3>
+        <div id="imagesContainer"></div>
+    </div>
+
+    <!-- Form per creare un nuovo album -->
+    <div class="create-album-form">
+        <h3>Create a New Album</h3>
+        <form id="createAlbumForm">
+            <label for="albumTitle">Album Title:</label>
+            <input type="text" id="albumTitle" name="title" required>
+            <button type="submit" class="btn-create-album">Create Album</button>
+        </form>
+    </div>
+
+    <!-- Tabella degli album -->
+    <div class="album-table">
+        <h3>Your Albums</h3>
+        <table>
+            <thead>
+                <tr>
+                    <th>Album ID</th>
+                    <th>Title</th>
+                    <th>Creator</th>
+                    <th>Creation Date</th>
+                </tr>
+            </thead>
+            <tbody id="albumTableBody">
+                <!-- Album saranno aggiunti dinamicamente -->
+            </tbody>
+        </table>
+    </div>
+
+    <script src="homePage.js"></script>
 </body>
 </html>

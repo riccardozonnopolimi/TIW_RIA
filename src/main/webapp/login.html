@@ -1,36 +1,52 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Login and Registration</title>
-    <link rel="stylesheet" href="styles.css">
-    <script src="js/validation.js" defer></script>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Login and Registration</title>
+  <link rel="stylesheet" href="styles.css" />
+  <!-- Carichiamo prima utils.js e poi login.js (che lo utilizza) -->
+  <script src="utils.js" defer></script>
+  <script src="login.js" defer></script>
 </head>
 <body>
-    <div class="container">
-        <h1>Login</h1>
-        <form id="loginForm" action="Login" method="post">
-            <label for="loginEmail">Email:</label>
-            <input type="email" id="loginEmail" name="email" required>
-            <label for="loginPassword">Password:</label>
-            <input type="password" id="loginPassword" name="password" required>
-            <button type="submit">Login</button>
-        </form>
-    </div>
-    <div class="container">
-        <h1>Register Now</h1>
-        <form id="registerForm" action="Register" method="post">
-            <label for="registerEmail">Email:</label>
-            <input type="email" id="registerEmail" name="email" required>
-            <label for="registerUsername">Username:</label>
-            <input type="text" id="registerUsername" name="username" required>
-            <label for="registerPassword">Password:</label>
-            <input type="password" id="registerPassword" name="password" required>
-            <label for="confirmPassword">Confirm Password:</label>
-            <input type="password" id="confirmPassword" name="repeat_pwd" required>
-            <button type="submit">Register</button>
-        </form>
-    </div>
+  <div class="container">
+    <h1>Login</h1>
+    <!-- Nessun "action": gestiamo tutto via AJAX -->
+    <form id="loginForm" method="post">
+      <label for="loginEmail">Email:</label>
+      <input type="email" id="loginEmail" name="email" required />
+
+      <label for="loginPassword">Password:</label>
+      <input type="password" id="loginPassword" name="password" required />
+
+      <button type="submit">Login</button>
+    </form>
+    <!-- Mostriamo qui il risultato del login (successo/errore) -->
+    <div id="loginResult"></div>
+  </div>
+
+  <div class="container">
+    <h1>Register Now</h1>
+    <!-- Anche per la registrazione nessun action: solo AJAX -->
+    <form id="registerForm" method="post">
+      <label for="registerEmail">Email:</label>
+      <input type="email" id="registerEmail" name="email" required />
+
+      <label for="registerUsername">Username:</label>
+      <input type="text" id="registerUsername" name="username" required />
+
+      <label for="registerPassword">Password:</label>
+      <input type="password" id="registerPassword" name="password" required />
+
+      <label for="confirmPassword">Confirm Password:</label>
+      <input type="password" id="confirmPassword" name="repeat_pwd" required />
+
+      <button type="submit">Register</button>
+    </form>
+    <!-- Mostriamo qui il risultato della registrazione (successo/errore) -->
+    <div id="registerResult"></div>
+  </div>
 </body>
 </html>
+

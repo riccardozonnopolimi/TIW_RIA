@@ -1,8 +1,10 @@
 package it.polimi.tiw.controllers;
 
 import java.io.IOException;
+import java.io.PrintWriter;
 import java.sql.Connection;
 import java.sql.SQLException;
+import java.util.Arrays;
 
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
@@ -12,99 +14,163 @@ import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
 
-import org.thymeleaf.TemplateEngine;
+import com.google.gson.Gson;
 
-import it.polimi.tiw.beans.User;
-import it.polimi.tiw.util.ConnectionHandler;
+import it.polimi.tiw.DAO.AlbumDAO;
+import it.polimi.tiw.DAO.ImmagineDAO;
 import it.polimi.tiw.DAO.UserDAO;
+import it.polimi.tiw.beans.Album;
+import it.polimi.tiw.beans.AlbumData;
+import it.polimi.tiw.beans.Immagine;
+import it.polimi.tiw.beans.ImmagineData;
+import it.polimi.tiw.beans.User;
+import it.polimi.tiw.beans.UserData;
+import it.polimi.tiw.util.ConnectionHandler;
 
-/**
- * Servlet implementation class Login
- */
 @WebServlet("/Login")
 public class Login extends HttpServlet {
-	private static final long serialVersionUID = 1L;
-	private Connection connection = null;
+    private static final long serialVersionUID = 1L;
+    private Connection connection = null;
 
-	/**
-	 * @see HttpServlet#HttpServlet()
-	 */
-	public Login() {
-		super();
-		// TODO Auto-generated constructor stub
-	}
+    public Login() {
+        super();
+    }
 
-	@Override
-	public void init() throws ServletException {
+    @Override
+    public void init() throws ServletException {
+        ServletContext servletContext = getServletContext();
+        this.connection = ConnectionHandler.getConnection(servletContext);
+    }
 
-		ServletContext servletContext = getServletContext();
-		this.connection = ConnectionHandler.getConnection(servletContext);
-	}
+    @Override
+    public void destroy() {
+        try {
+            ConnectionHandler.closeConnection(connection);
+        } catch (SQLException e) {
+            e.printStackTrace();
+        }
+    }
 
-	@Override
-	public void destroy() {
+    @Override
+    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
+        // Reindirizziamo a doPost
+        doPost(request, response);
+    }
 
-		try {
+    @Override
+    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+            throws ServletException, IOException {
 
-			ConnectionHandler.closeConnection(connection);
+        // Rispondiamo in JSON
+        response.setContentType("application/json");
+        response.setCharacterEncoding("UTF-8");
 
-		} catch (SQLException e) {
+        // Recupero parametri
+        String email = request.getParameter("email");
+        String password = request.getParameter("password");
 
-			e.printStackTrace();
-		}
-	}
-	
-	
-	@Override
-	protected void doGet(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
-		// TODO Auto-generated method stub
-		doPost(request, response);
-	}
-	
-	@Override
-	protected void doPost(HttpServletRequest request, HttpServletResponse response)
-			throws ServletException, IOException {
+        // Crea un oggetto UserData (per la risposta)
+        UserData userData;
 
-		String email = request.getParameter("email");
-		String password = request.getParameter("password");
+        // Check parametri
+        if (email == null || password == null || email.isBlank() || password.isBlank()) {
+            userData = new UserData(false, "Email or password missing");
+            writeJsonResponse(response, userData);
+            return;
+        }
 
-		// Verify if the given argument are null and if so forward to errorPage
-		if (email == null || password == null) {
+        // Verifica credenziali con UserDAO
+        UserDAO userDAO = new UserDAO(connection);
+        User user = null;
+        try {
+            user = userDAO.getUserLog(email, password);
+        } catch (SQLException e) {
+            userData = new UserData(false, "Database error: " + e.getMessage());
+            writeJsonResponse(response, userData);
+            return;
+        }
 
-			// TODO forwardToErrorPage(request, response, "Null email or password");
-			return;
-		}
+        // Se l'utente non esiste => login fallita
+        if (user == null) {
+            userData = new UserData(false, "Email or password incorrect!");
+            writeJsonResponse(response, userData);
+            return;
+        }
 
-		// Query DB to authenticate user
-		// If user not present, forward to ErrorPage
-		UserDAO userDAO = new UserDAO(connection);
-		User user = null;
+        // LOGIN OK => impostiamo la sessione
+        HttpSession session = request.getSession();
+        session.setAttribute("currentUser", user);
+        session.setAttribute("currentUserId", user.getId_user());
+        session.setAttribute("currentUserUsername", user.getUsername());
 
-		try {
+        // Creiamo un UserData con success = true e dati utente
+        userData = new UserData(user);
+        // Se vuoi cambiare "message" di default
+        // userData.setMessage("Welcome user " + user.getUsername() + "!");
 
-			user = userDAO.getUserLog(email, password);
+        // Carichiamo i dati extra
+        AlbumDAO albumDAO = new AlbumDAO(connection);
+        ImmagineDAO immagineDAO = new ImmagineDAO(connection);
 
-		} catch (SQLException e) {
+        Album[] userAlbums;
+        Album[] otherAlbums;
+        Immagine[] userImmagini;
 
-			request.setAttribute("warning", "Email or password incorrect!");
-			//TODO forward(request, response, "/WEB-INF/login.html");
-			return;
-		}
+        try {
+            userAlbums = albumDAO.getAllUserAlbum2(user.getId_user());
+        } catch (SQLException e) {
+            userData.setSuccess(false);
+            userData.setMessage("Error retrieving userAlbums: " + e.getMessage());
+            writeJsonResponse(response, userData);
+            return;
+        }
+        try {
+            otherAlbums = albumDAO.getAllOtherUserAlbums(user.getId_user());
+        } catch (SQLException e) {
+            userData.setSuccess(false);
+            userData.setMessage("Error retrieving otherAlbums: " + e.getMessage());
+            writeJsonResponse(response, userData);
+            return;
+        }
+        try {
+            userImmagini = immagineDAO.getAllUserPhoto(user.getId_user());
+        } catch (SQLException e) {
+            userData.setSuccess(false);
+            userData.setMessage("Error retrieving userImages: " + e.getMessage());
+            writeJsonResponse(response, userData);
+            return;
+        }
 
-		// If the user exists, add info to the session and go to home page, otherwise
-		// show login page with error message
-		if (user == null) {
+        // Convertiamo in data
+        AlbumData[] userAlbumsData = (userAlbums != null)
+            ? Arrays.stream(userAlbums).map(AlbumData::new).toArray(AlbumData[]::new)
+            : new AlbumData[0];
 
-			request.setAttribute("warning", "Email or password incorrect!");
-			//TODO forward(request, response, "/WEB-INF/login.html");
-			return;
-		}
+        AlbumData[] otherAlbumsData = (otherAlbums != null)
+            ? Arrays.stream(otherAlbums).map(AlbumData::new).toArray(AlbumData[]::new)
+            : new AlbumData[0];
 
-		HttpSession session = request.getSession();
-		session.setAttribute("currentUser", user);
-		session.setAttribute("currentUserId", user.getId_user());
-		response.sendRedirect("homePage.html");
-	}
+        ImmagineData[] userImagesData = (userImmagini != null)
+            ? Arrays.stream(userImmagini).map(ImmagineData::new).toArray(ImmagineData[]::new)
+            : new ImmagineData[0];
 
+        // Assegnali a userData
+        userData.setMyAlbums(userAlbumsData);
+        userData.setOtherAlbums(otherAlbumsData);
+        userData.setMyImages(userImagesData);
+
+        // Invio JSON finale
+        writeJsonResponse(response, userData);
+    }
+
+    private void writeJsonResponse(HttpServletResponse response, UserData data) 
+            throws IOException {
+        Gson gson = new Gson();
+        String json = gson.toJson(data);
+        PrintWriter out = response.getWriter();
+        out.print(json);
+        out.flush();
+    }
 }
+

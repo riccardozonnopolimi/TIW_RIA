@@ -76,14 +76,15 @@ public class DeletePhoto extends HttpServlet {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
                 return;
             }
-
+            
+            albumDAO.refactorPosition(imageId);
             // 2. Elimina tutti i commenti su quell’immagine
             commentoDAO.deleteAllCommentsByImageId(imageId);
 
             // 3. Decrementa il conteggio dell'album, se necessario
             albumDAO.decrementAlbumImageCount(imageId);
             
-            //albumDAO.refactorPosition(imageId);
+            
 
             // 4. Rimuove i link image_album
             immagineDAO.delinkImageToAlbum(imageId);

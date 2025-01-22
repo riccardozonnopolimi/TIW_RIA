@@ -557,7 +557,7 @@ public class AlbumDAO {
 	 		        
 	 		        statement2.setInt(2, posizione[j]);
 	 		       System.out.println(statement2);
-	 		        statement2.executeUpdate(query2);
+	 		        statement2.executeUpdate();
 	 		        
 	 	    	 }
 	 	     }catch (SQLException e) {

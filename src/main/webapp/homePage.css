@@ -135,9 +135,11 @@ button:hover {
 
 /* Pulsanti di navigazione (Previous/Next) */
 .nav-buttons {
-    position: relative;   /* Contenitore posizionato */
-    margin-bottom: 10px;
-    min-height: 40px;     /* Garantisce spazio verticale */
+    display: flex;
+    justify-content: center; /* Bottoni ai lati */
+    align-items: center;
+    margin-top: 20px;
+    padding: 10px 0;    /* Garantisce spazio verticale */
 }
 .nav-buttons #prevImagesBtn {
     background-color: #007BFF;

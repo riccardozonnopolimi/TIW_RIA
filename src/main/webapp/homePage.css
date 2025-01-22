@@ -20,7 +20,6 @@ body {
     cursor: pointer;
     font-weight: bold;
 }
-
 .btn-logout:hover {
     background-color: #b52a36;
 }
@@ -31,14 +30,13 @@ body {
     margin-bottom: 10px;
     justify-content: center;
 }
-
 .titles h2 {
     font-size: 18px;
     color: #666;
     justify-content: center;
 }
 
-/* Form di upload */
+/* Form di upload e create album */
 .upload-form,
 .create-album-form {
     margin: 20px 0;
@@ -69,17 +67,25 @@ button {
     border-radius: 5px;
     cursor: pointer;
 }
-
 button:hover {
     background-color: #0056b3;
 }
 
-/* Galleria immagini */
+/* Sezione container principale per la galleria (può restare un blocco normale) */
 .image-gallery {
     margin: 20px 0;
 }
 
-.image-gallery img {
+/* #imagesContainer come flex container */
+#imagesContainer {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: flex-start;
+}
+
+/* Stile delle immagini */
+#imagesContainer img {
     width: 150px;
     height: 150px;
     margin: 5px;
@@ -88,23 +94,60 @@ button:hover {
     transition: transform 0.2s ease;
 }
 
-.image-gallery img:hover {
+#imagesContainer img:hover {
     transform: scale(1.1);
 }
+
 
 /* Tabella degli album */
 .album-table table {
     width: 100%;
     border-collapse: collapse;
 }
-
 .album-table th,
 .album-table td {
     border: 1px solid #ddd;
     padding: 10px;
     text-align: left;
 }
-
 .album-table th {
     background-color: #f2f2f2;
 }
+
+/* Link cliccabile sul titolo dell'album */
+.album-title-link {
+    color: #007BFF;
+    text-decoration: underline;
+    cursor: pointer;
+}
+.album-title-link:hover {
+    color: #0056b3;
+}
+
+/* Blocco delle immagini di un album selezionato */
+.album-images-block {
+    margin-top: 20px;
+    padding: 15px;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    background-color: #fff;
+}
+
+/* Pulsanti di navigazione (Previous/Next) */
+.nav-buttons {
+    margin-bottom: 10px;
+}
+
+/* Tabella 1x5 per le immagini dell'album */
+.thumbnail-grid {
+    width: 100%;
+    border-collapse: collapse;
+    text-align: center;
+}
+.thumbnail-grid td {
+    width: 20%;
+    vertical-align: top;
+    padding: 5px;
+    border: 1px solid #ddd;
+}
+

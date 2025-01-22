@@ -89,8 +89,27 @@
         </table>
     </div>
 
+    <!-- Sezione che mostra le immagini di un album selezionato -->
+    <div id="selectedAlbumView" class="album-images-block" style="display: none;">
+        <h3 id="selectedAlbumTitle">Album Images</h3>
+        <div class="nav-buttons">
+            <button id="prevImagesBtn">Previous 5</button>
+            <button id="nextImagesBtn">Next 5</button>
+        </div>
+        <table id="selectedAlbumTable" class="thumbnail-grid">
+            <tr>
+                <!-- 5 celle vuote da riempire dinamicamente -->
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+                <td></td>
+            </tr>
+        </table>
+    </div>
+
     <!-- Script JS -->
-    <script src="utils.js"></script> <!-- le tue funzioni AJAX -->
+    <script src="utils.js"></script>
     <script src="homePage.js"></script>
 </body>
 </html>

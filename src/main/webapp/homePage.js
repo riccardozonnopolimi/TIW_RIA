@@ -1,17 +1,5 @@
-/**
- * homePage.js
- * 
- * - Controlla login via sessionStorage
- * - Carica myImages, myAlbums, otherAlbums
- * - Visualizza "Your Images" in forma orizzontale
- * - Cliccando su un album => visualizza immagini dell'album (paginazione 5/volta)
- * - Visualizza le immagini non ancora nell'album, cliccabili => AddImageToAlbum
- * - Gestisce upload (UploadPhoto) e creazione album (CreateAlbum)
- * - Aggiorna i dati richiamando GetImages / GetAlbums quando serve
- */
-
 document.addEventListener("DOMContentLoaded", function () {
-    // Riferimenti a elementi della pagina
+    // -------------- Elementi base ---------------
     const logoutBtn = document.getElementById("logoutBtn");
     const usernameSpan = document.getElementById("username");
 
@@ -21,75 +9,70 @@ document.addEventListener("DOMContentLoaded", function () {
     const createAlbumForm = document.getElementById("createAlbumForm");
     const createAlbumResult = document.getElementById("createAlbumResult");
 
-    // Sezione che mostra le immagini di un album selezionato
+    // Sezione album selezionato
     const selectedAlbumView = document.getElementById("selectedAlbumView");
     const selectedAlbumTitle = document.getElementById("selectedAlbumTitle");
     const selectedAlbumTable = document.getElementById("selectedAlbumTable");
     const prevImagesBtn = document.getElementById("prevImagesBtn");
     const nextImagesBtn = document.getElementById("nextImagesBtn");
-
-    // Sezione con le immagini "non in album"
     const notInAlbumContainer = document.getElementById("notInAlbumContainer");
 
-    // Variabili globali di stato
+    // Modale
+    const modalOverlay = document.getElementById("modalOverlay");
+    const imageModal = document.getElementById("imageModal");
+    const closeModalBtn = document.getElementById("closeModalBtn");
+    const modalImage = document.getElementById("modalImage");
+    const modalImageTitle = document.getElementById("modalImageTitle");
+    const modalImageDesc = document.getElementById("modalImageDesc");
+    const modalComments = document.getElementById("modalComments");
+    const modalCommentForm = document.getElementById("modalCommentForm");
+    const modalCommentText = document.getElementById("modalCommentText");
+
+    // Variabili globali
     let myImages = [];
     let myAlbums = [];
     let otherAlbums = [];
 
-    // Per la visualizzazione dell'album corrente
+    // Stato album
     let currentAlbumImages = [];
     let currentAlbumPage = 0;
     let currentAlbumId = null;
 
-    // ==========================
-    // 1. Controllo login
-    // ==========================
+    // Check login
     const username = sessionStorage.getItem("username");
     if (!username) {
-        // Non loggato => redirect
         window.location.href = "login.html";
         return;
     }
     usernameSpan.textContent = username;
 
-    // ==========================
-    // 2. Caricamento dati da sessionStorage
-    // ==========================
-    // TUTTE le immagini dell'utente
+    // Carichiamo i dati
     myImages = JSON.parse(sessionStorage.getItem("myImages") || "[]");
-    // Album dell'utente
     myAlbums = JSON.parse(sessionStorage.getItem("myAlbums") || "[]");
-    // Album di altri utenti
     otherAlbums = JSON.parse(sessionStorage.getItem("otherAlbums") || "[]");
 
-    // ==========================
-    // 3. Visualizzazioni iniziali
-    // ==========================
+    // Popolamento iniziale
     populateImages(myImages);
     populateAlbums(myAlbums);
     populateOtherAlbums(otherAlbums);
 
-    // ==========================
-    // 4. Logout
-    // ==========================
+    // Logout
     logoutBtn.addEventListener("click", function () {
         sessionStorage.clear();
         window.location.href = "login.html";
     });
 
-    // ==========================
-    // 5. Upload Photo
-    // ==========================
+    // ========================
+    // Upload Photo
+    // ========================
     uploadForm.addEventListener("submit", function (event) {
         event.preventDefault();
-
         let formData = new FormData(uploadForm);
-        // POST -> /UploadPhoto
         makeFormDataCall("POST", "UploadPhoto", formData, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
                     uploadResult.textContent = "Image uploaded successfully!";
-                    // Ricarichiamo /GetImages per avere myImages aggiornato
+                    // Ricarichiamo /GetImages
                     makeCall("GET", "GetImages", null, function (req2) {
                         if (req2.readyState === XMLHttpRequest.DONE) {
                             if (req2.status === 200) {
@@ -97,13 +80,13 @@ document.addEventListener("DOMContentLoaded", function () {
                                 sessionStorage.setItem("myImages", JSON.stringify(myImages));
                                 populateImages(myImages);
                             } else {
-                                uploadResult.textContent =
+                                uploadResult.textContent = 
                                     "Error getting updated images: " + req2.status;
                             }
                         }
                     });
                 } else {
-                    let errorMsg = req.status === 401
+                    let errorMsg = req.status === 401 
                         ? "Unauthorized: please log in again."
                         : (req.responseText || "Upload failed");
                     uploadResult.textContent = errorMsg;
@@ -112,18 +95,15 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ==========================
-    // 6. Create Album
-    // ==========================
+    // ========================
+    // Create Album
+    // ========================
     createAlbumForm.addEventListener("submit", function (event) {
         event.preventDefault();
-
-        // POST -> /CreateAlbum
         makeFormCall("POST", "CreateAlbum", createAlbumForm, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
                     createAlbumResult.textContent = "Album created successfully!";
-                    // Ricarichiamo /GetAlbums
                     makeCall("GET", "GetAlbums", null, function (req2) {
                         if (req2.readyState === XMLHttpRequest.DONE) {
                             if (req2.status === 200) {
@@ -131,7 +111,7 @@ document.addEventListener("DOMContentLoaded", function () {
                                 sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
                                 populateAlbums(myAlbums);
                             } else {
-                                createAlbumResult.textContent =
+                                createAlbumResult.textContent = 
                                     "Error getting updated albums: " + req2.status;
                             }
                         }
@@ -146,9 +126,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     });
 
-    // ==========================
-    // Funzione: visualizza "Your Images" in orizzontale
-    // ==========================
+    // ========================
+    // Sezione "Your Images" (orizzontale)
+    // ========================
     function populateImages(imagesArray) {
         const imagesContainer = document.getElementById("imagesContainer");
         imagesContainer.innerHTML = "";
@@ -174,15 +154,18 @@ document.addEventListener("DOMContentLoaded", function () {
             imgTag.src = "DownloadPhoto?imageId=" + img.id_immagine;
             imgTag.alt = img.titolo;
             imgTag.classList.add("thumbnail");
-            div.appendChild(imgTag);
 
+            // Se volessimo la modale anche qui: 
+            // potremmo aggiungere un onmouseover => showModalImage(img)
+            // Oppure lasciamo come da specifica "nell'album"
+            div.appendChild(imgTag);
             imagesContainer.appendChild(div);
         });
     }
 
-    // ==========================
-    // Funzione: visualizza la lista "myAlbums"
-    // ==========================
+    // ========================
+    // Sezione "My Albums" e "Other Albums"
+    // ========================
     function populateAlbums(albumsArray) {
         const albumTableBody = document.getElementById("albumTableBody");
         albumTableBody.innerHTML = "";
@@ -200,28 +183,25 @@ document.addEventListener("DOMContentLoaded", function () {
         albumsArray.forEach(album => {
             const row = document.createElement("tr");
 
-            // ID
             const idCell = document.createElement("td");
             idCell.textContent = album.id_album;
             row.appendChild(idCell);
 
-            // Title => cliccabile
             const titleCell = document.createElement("td");
             const titleSpan = document.createElement("span");
             titleSpan.classList.add("album-title-link");
             titleSpan.textContent = album.titolo;
+            // click => showAlbumImages
             titleSpan.addEventListener("click", function () {
                 showAlbumImages(album);
             });
             titleCell.appendChild(titleSpan);
             row.appendChild(titleCell);
 
-            // Creator
             const creatorCell = document.createElement("td");
             creatorCell.textContent = album.usernameCreatore || "";
             row.appendChild(creatorCell);
 
-            // Date
             const dateCell = document.createElement("td");
             dateCell.textContent = album.data_creazione 
                 ? new Date(album.data_creazione).toLocaleString() 
@@ -231,10 +211,6 @@ document.addEventListener("DOMContentLoaded", function () {
             albumTableBody.appendChild(row);
         });
     }
-
-    // ==========================
-    // Funzione: visualizza la lista "otherAlbums"
-    // ==========================
     function populateOtherAlbums(albumsArray) {
         const otherAlbumTableBody = document.getElementById("otherAlbumTableBody");
         otherAlbumTableBody.innerHTML = "";
@@ -260,6 +236,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const titleSpan = document.createElement("span");
             titleSpan.classList.add("album-title-link");
             titleSpan.textContent = album.titolo;
+            // click => showAlbumImages
             titleSpan.addEventListener("click", function () {
                 showAlbumImages(album);
             });
@@ -280,9 +257,9 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================
-    // showAlbumImages => mostra il blocco di immagini (paginazione) + "not in album"
-    // ==========================
+    // ========================
+    // showAlbumImages => blocco 1x5 + notInAlbum
+    // ========================
     function showAlbumImages(album) {
         selectedAlbumView.style.display = "block";
         selectedAlbumTitle.textContent = `Images of Album: ${album.titolo}`;
@@ -291,28 +268,19 @@ document.addEventListener("DOMContentLoaded", function () {
         currentAlbumPage = 0;
         currentAlbumId = album.id_album;
 
-        // Renderizziamo la paginazione
         renderAlbumImages();
 
-        // Calcoliamo le immagini "notInAlbum"
         let notInAlbum = computeNotInAlbumImages(album.immagini || []);
         populateNotInAlbumImages(notInAlbum, album.id_album);
     }
 
-    // ==========================
-    // computeNotInAlbumImages => myImages - albumImages
-    // ==========================
     function computeNotInAlbumImages(albumImages) {
-        const albumImageIds = new Set(albumImages.map(img => img.id_immagine));
-        return myImages.filter(img => !albumImageIds.has(img.id_immagine));
+        const albumImageIds = new Set(albumImages.map(i => i.id_immagine));
+        return myImages.filter(i => !albumImageIds.has(i.id_immagine));
     }
 
-    // ==========================
-    // populateNotInAlbumImages => mostra orizzontalmente e cliccabile
-    // ==========================
     function populateNotInAlbumImages(imagesArray, albumId) {
         notInAlbumContainer.innerHTML = "";
-
         if (!imagesArray || imagesArray.length === 0) {
             let p = document.createElement("p");
             p.textContent = "No images outside this album.";
@@ -326,12 +294,12 @@ document.addEventListener("DOMContentLoaded", function () {
             thumb.alt = img.titolo;
             thumb.style.width = "120px";
             thumb.style.height = "120px";
-            thumb.style.objectFit = "cover";
             thumb.style.cursor = "pointer";
+            thumb.style.objectFit = "cover";
             thumb.style.borderRadius = "5px";
+            thumb.style.marginRight = "5px";
 
             thumb.addEventListener("click", function () {
-                // AddImageToAlbum
                 addImageToAlbum(albumId, img.id_immagine);
             });
 
@@ -339,22 +307,19 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================
-    // addImageToAlbum => GET /AddImageToAlbum?albumId=...&imageId=...
-    // ==========================
     function addImageToAlbum(albumId, imageId) {
-        const url = "AddImageToAlbum?albumId=" + albumId + "&imageId=" + imageId;
+        let url = "AddImageToAlbum?albumId=" + albumId + "&imageId=" + imageId;
         makeCall("GET", url, null, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
-                    // Ricarichiamo /GetAlbums per avere l'album aggiornato
+                    // Ricarichiamo /GetAlbums
                     makeCall("GET", "GetAlbums", null, function (req2) {
                         if (req2.readyState === XMLHttpRequest.DONE) {
                             if (req2.status === 200) {
-                                let updatedAlbums = JSON.parse(req2.responseText);
-                                sessionStorage.setItem("myAlbums", JSON.stringify(updatedAlbums));
-                                // Cerchiamo l'albumId
-                                let foundAlbum = updatedAlbums.find(a => a.id_album === albumId);
+                                myAlbums = JSON.parse(req2.responseText);
+                                sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
+                                // Cerchiamo l'album
+                                let foundAlbum = myAlbums.find(a => a.id_album === albumId);
                                 if (foundAlbum) {
                                     showAlbumImages(foundAlbum);
                                 }
@@ -372,29 +337,39 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ==========================
-    // renderAlbumImages => paginazione 5/volta
-    // ==========================
+    // ========================
+    // Paginazione (1 x 5)
+    // ========================
     function renderAlbumImages() {
         const row = selectedAlbumTable.querySelector("tr");
         while (row.firstChild) {
             row.removeChild(row.firstChild);
         }
 
-        const startIndex = currentAlbumPage * 5;
-        const endIndex = startIndex + 5;
+        let startIndex = currentAlbumPage * 5;
+        let endIndex = startIndex + 5;
         let slice = currentAlbumImages.slice(startIndex, endIndex);
 
         for (let i = 0; i < 5; i++) {
             const cell = document.createElement("td");
             if (i < slice.length) {
-                const imgObj = slice[i];
-
+                let imgObj = slice[i];
                 let thumb = document.createElement("img");
                 thumb.src = "DownloadPhoto?imageId=" + imgObj.id_immagine;
                 thumb.alt = imgObj.titolo;
                 thumb.style.width = "100px";
                 thumb.style.height = "100px";
+                thumb.style.cursor = "pointer";
+
+                // MOUSEOVER => showModalImage con i dettagli
+                thumb.addEventListener("mouseover", function () {
+                    // Apriamo modale e mostriamo dettagli
+                    showModalImage(imgObj);
+                });
+
+                // Se vogliamo che la modale si chiuda al mouseout,
+                // potremmo aggiungere un eventListener "mouseout" => hideModal(),
+                // ma in genere si usa un "click" per aprire e un bottone "x" per chiudere.
 
                 let titleElem = document.createElement("div");
                 titleElem.textContent = imgObj.titolo;
@@ -405,12 +380,12 @@ document.addEventListener("DOMContentLoaded", function () {
             row.appendChild(cell);
         }
 
+        // Bottoni
         prevImagesBtn.disabled = (currentAlbumPage === 0);
         let maxPage = Math.floor((currentAlbumImages.length - 1) / 5);
         nextImagesBtn.disabled = (currentAlbumPage >= maxPage);
     }
 
-    // Bottoni prev/next per la paginazione
     prevImagesBtn.addEventListener("click", function () {
         if (currentAlbumPage > 0) {
             currentAlbumPage--;
@@ -423,5 +398,97 @@ document.addEventListener("DOMContentLoaded", function () {
             currentAlbumPage++;
             renderAlbumImages();
         }
+    });
+
+    // ========================
+    // Modal con immagine + commenti + form comment
+    // ========================
+    function showModalImage(imgObj) {
+        // Riempiamo i campi
+        modalImage.src = "DownloadPhoto?imageId=" + imgObj.id_immagine;
+        modalImageTitle.textContent = imgObj.titolo;
+        modalImageDesc.textContent = imgObj.descrizione || "";
+
+        // Puliamo e mostriamo i commenti
+        populateModalComments(imgObj.commenti || []);
+        
+        // Salviamo id_immagine su un attributo data
+        modalCommentForm.dataset.imageId = imgObj.id_immagine;
+
+        // Apriamo la modale
+        modalOverlay.style.display = "flex";
+    }
+
+    function populateModalComments(commentiArray) {
+        modalComments.innerHTML = "";
+        if (!commentiArray || commentiArray.length === 0) {
+            modalComments.textContent = "No comments yet.";
+            return;
+        }
+        commentiArray.forEach(c => {
+            let div = document.createElement("div");
+            div.classList.add("comment-item");
+            div.textContent = c.username + ": " + c.testo; // + data_creazione se vuoi
+            modalComments.appendChild(div);
+        });
+    }
+
+    // Chiudi modale
+    closeModalBtn.addEventListener("click", function () {
+        hideModal();
+    });
+    function hideModal() {
+        modalOverlay.style.display = "none";
+    }
+
+    // ========================
+    // Gestione form commenti nella modale
+    // ========================
+    modalCommentForm.addEventListener("submit", function (e) {
+        e.preventDefault();
+        let testo = modalCommentText.value.trim();
+        if (!testo) {
+            alert("Comment cannot be empty!");
+            return;
+        }
+        let imageId = modalCommentForm.dataset.imageId;
+        // Serve anche l'albumId => currentAlbumId
+        // GET /AddComment?imageId=...&albumId=...&testo=...
+        let url = "AddComment?imageId=" + imageId + "&albumId=" + currentAlbumId + 
+                  "&testo=" + encodeURIComponent(testo);
+
+        makeCall("GET", url, null, function (req) {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    // Ricarichiamo /GetAlbums per avere il commento aggiornato
+                    makeCall("GET", "GetAlbums", null, function (req2) {
+                        if (req2.readyState === XMLHttpRequest.DONE) {
+                            if (req2.status === 200) {
+                                myAlbums = JSON.parse(req2.responseText);
+                                sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
+                                // Troviamo l'album con currentAlbumId
+                                let foundAlbum = myAlbums.find(a => a.id_album === currentAlbumId);
+                                if (foundAlbum) {
+                                    // Troviamo l'immagine aggiornata
+                                    let updatedImg = foundAlbum.immagini.find(i => i.id_immagine == imageId);
+                                    if (updatedImg) {
+                                        // Ricarichiamo i commenti
+                                        populateModalComments(updatedImg.commenti || []);
+                                    }
+                                }
+                            } else {
+                                alert("Error reloading albums: " + req2.status);
+                            }
+                        }
+                    });
+                    // Puliamo il textarea
+                    modalCommentText.value = "";
+                } else if (req.status === 401) {
+                    alert("Unauthorized, please log in again.");
+                } else {
+                    alert("Error adding comment: " + req.status);
+                }
+            }
+        });
     });
 });

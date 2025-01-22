@@ -102,10 +102,32 @@
             </tr>
         </table>
 
-        <!-- Nuova sezione: Immagini non in questo album -->
+        <!-- Sezione "not in album" -->
         <div class="not-in-album-section">
             <h4>Images not in this album</h4>
             <div id="notInAlbumContainer" class="not-in-album-gallery"></div>
+        </div>
+    </div>
+
+    <!-- Modale per mostrare info immagine e commenti -->
+    <div id="modalOverlay" class="modal-overlay" style="display: none;">
+        <div id="imageModal" class="modal-content">
+            <button id="closeModalBtn" class="close-modal">&times;</button>
+            <img id="modalImage" src="" alt="Modal Image" />
+            
+            <!-- Qui le info immagine -->
+            <h4 id="modalImageTitle"></h4>
+            <p id="modalImageDesc"></p>
+
+            <!-- Commenti -->
+            <div id="modalComments"></div>
+
+            <!-- Form per aggiungere un commento -->
+            <form id="modalCommentForm">
+                <label for="modalCommentText">Add a Comment:</label>
+                <textarea id="modalCommentText" name="testo" rows="2" required></textarea>
+                <button type="submit">Send Comment</button>
+            </form>
         </div>
     </div>
 
@@ -113,4 +135,3 @@
     <script src="homePage.js"></script>
 </body>
 </html>
-

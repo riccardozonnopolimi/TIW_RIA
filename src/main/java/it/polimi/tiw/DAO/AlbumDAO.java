@@ -324,16 +324,11 @@ public class AlbumDAO {
  	                    immagini[k] = imageDao.getImageById(id_immagini[k]);
  	                }
  	                
- 	                System.out.println("stampo album prima di ordinamento ID: " + album.getId_album() );
- 	                for(int a = 0; a < album.getTotale_immagini(); a++) {
- 	                	System.out.println(immagini[a].getId_immagine());
- 	                }
+ 	                
+
  	                immagini = orderImage(immagini, flag, posizioni);
  	                album.setImmagini(immagini);
- 	               System.out.println("stampo album dopo ordinamento ID: " + album.getId_album() );
-	                for(int a = 0; a < album.getTotale_immagini(); a++) {
-	                	System.out.println(album.getImmagini()[a].getId_immagine());
-	                }
+	                
  	            }
 
  	            allAlbum[i] = album;

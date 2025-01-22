@@ -84,7 +84,6 @@ public class UploadPhoto extends HttpServlet {
             filePart.write(filePath);
             File uploadedFile = new File(filePath);
             if (uploadedFile.exists()) {
-                System.out.println("File scritto correttamente: " + filePath);
             } else {
                 System.err.println("Errore: il file non è stato scritto.");
             }

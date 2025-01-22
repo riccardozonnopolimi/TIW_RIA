@@ -215,7 +215,7 @@ public class AlbumDAO {
  	        int i = 0;  // Indice per l'array
 
  	        while (result.next()) {
- 	            // 🔄 Raddoppio la dimensione dell'array se pieno
+ 	            //  Raddoppio la dimensione dell'array se pieno
  	            if (i == allAlbums.length) {
  	                allAlbums = resizeArray(allAlbums);
  	            }
@@ -230,7 +230,7 @@ public class AlbumDAO {
  	            album = new Album(id_album, titolo, id_user_proprietario, totale_immagini, data);
  	           album.setUsernameCreatore(username_proprietario);
 
- 	            // ✅ Recupero le immagini associate all'album
+ 	            // Recupero le immagini associate all'album
  	            if (album.getTotale_immagini() > 0) {
  	                String query2 = "SELECT * FROM image_album WHERE id_alb = ?";
  	                statement2 = connection.prepareStatement(query2);
@@ -257,12 +257,12 @@ public class AlbumDAO {
  	            i++;
  	        }
 
- 	        // ✅ Se non sono stati trovati album, ritorna null
+ 	        //  Se non sono stati trovati album, ritorna null
  	        if (i == 0) {
  	            return null;
  	        }
 
- 	        // 🔄 Ridimensiono l'array alla dimensione reale
+ 	        //  Ridimensiono l'array alla dimensione reale
  	        allAlbums = trimArray(allAlbums, i);
 
  	    } catch (SQLException e) {
@@ -487,5 +487,104 @@ public class AlbumDAO {
 		
 		return isOwner;
 	}
+
+
+
+	public int lastPositionUsed(int albumId) throws SQLException {
+		String performedAction = "check last position used in an album";
+	    String query = "SELECT COALESCE(MAX(posizione), -1) as posizione FROM image_album WHERE id_alb = ?";
+	    PreparedStatement statement = null;
+	    ResultSet result = null;
+	    int posizione = 0;
+	    try {
+	    	statement = connection.prepareStatement(query);
+	        statement.setInt(1, albumId);
+	        result = statement.executeQuery();
+	        while(result.next()) {
+	        	posizione = result.getInt("posizione");
+	        }
+	        }catch (SQLException e) {
+	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
+	        } finally {
+	     		closeResources(result, statement);
+            }
+	    if(posizione == -1)
+	    	return 0;
+	    else
+		return posizione + 1;
+	}
+
+	public void refactorPosition(int imageId) throws SQLException {
+		String performedAction = "refactoring position in album when deleting a photo";
+	    String query = "SELECT id_alb, posizione FROM image_album WHERE id_ima = ? GROUP BY id_alb, posizione";
+	    PreparedStatement statement = null;
+	    ResultSet result = null;
+	    String query2 = "UPDATE image_album SET posizione = posizione - 1  WHERE (id_alb = ?) AND (posizione > ?)";
+	    PreparedStatement statement2 = null;
+	    int[] posizione = new int[1];
+	    int[] id_alb = new int[1];
+	    int i = 0;
+	    System.out.println("----sono entrato nel refactor-----");
+	    try {
+	    	statement = connection.prepareStatement(query);
+	        statement.setInt(1, imageId);
+	        result = statement.executeQuery();
+	        System.out.println("----fatta prima query-----");
+	        while(result.next()) {
+	        	if (i == posizione.length) {
+ 	                posizione = resizeArrayInt(posizione);
+ 	            }
+	        	if (i == id_alb.length) {
+ 	                id_alb = resizeArrayInt(id_alb);
+ 	            }
+	        	posizione[i] = result.getInt("posizione");
+	        	id_alb[i] = result.getInt("id_alb");
+	        	i++;
+	        }
+	        
+	 	       posizione = trimArrayInt(posizione, i);
+	 	       id_alb = trimArrayInt(id_alb, i);
+	 	      System.out.println("----sto per fare seconda-----");
+	 	      try {
+	 	    	 System.out.println("----vorrei fare seconda-----" + id_alb.length);
+	 	    	 for(int j = 0; j < id_alb.length; j++) {  
+	 	    		
+		 		       System.out.println(id_alb[j]);
+		 		      System.out.println(posizione[j]);
+	 		    	statement2 = connection.prepareStatement(query2);
+	 		    	System.out.println(statement2);
+	 		        statement2.setInt(1, id_alb[j]);
+	 		        
+	 		        statement2.setInt(2, posizione[j]);
+	 		       System.out.println(statement2);
+	 		        statement2.executeUpdate(query2);
+	 		        
+	 	    	 }
+	 	     }catch (SQLException e) {
+		        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
+		        } finally {
+		     		statement2.close();
+	            }
+	        }catch (SQLException e) {
+	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
+	        } finally {
+	     		closeResources(result, statement);
+            }
+		
+	}
+	 // Metodo per raddoppiare la dimensione dell'array
+ 	private int[] resizeArrayInt(int[] original) {
+ 	    int newSize = original.length * 2;
+ 	    int[] newArray = new int[newSize];
+ 	    System.arraycopy(original, 0, newArray, 0, original.length);
+ 	    return newArray;
+ 	}
+
+ 	// Metodo per tagliare l'array alla dimensione esatta
+ 	private int[] trimArrayInt(int[] original, int size) {
+ 	    int[] trimmedArray = new int[size];
+ 	    System.arraycopy(original, 0, trimmedArray, 0, size);
+ 	    return trimmedArray;
+ 	}
  	
 }

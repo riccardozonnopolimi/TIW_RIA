@@ -82,10 +82,13 @@ public class DeletePhoto extends HttpServlet {
 
             // 3. Decrementa il conteggio dell'album, se necessario
             albumDAO.decrementAlbumImageCount(imageId);
+            
+            //albumDAO.refactorPosition(imageId);
 
             // 4. Rimuove i link image_album
             immagineDAO.delinkImageToAlbum(imageId);
-
+            
+            
             // 5. Elimina l’immagine dal DB
             immagineDAO.deleteImageById(imageId);
 

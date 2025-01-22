@@ -7,6 +7,7 @@
     <title>Home Page</title>
 </head>
 <body>
+ <div id="mainContent">
     <!-- Bottone Logout -->
     <button id="logoutBtn" class="btn-logout">Logout</button>
 
@@ -88,9 +89,11 @@
             </tbody>
         </table>
     </div>
+    </div>
 
     <!-- Sezione che mostra le immagini di un album selezionato -->
     <div id="selectedAlbumView" class="album-images-block" style="display: none;">
+     <button id="closeAlbumViewBtn">Go Back</button>
         <h3 id="selectedAlbumTitle">Album Images</h3>
         <div class="nav-buttons">
             <button id="prevImagesBtn">Previous 5</button>

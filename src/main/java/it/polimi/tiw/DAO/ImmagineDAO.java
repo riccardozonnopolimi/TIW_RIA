@@ -199,13 +199,19 @@ public class ImmagineDAO {
 
 	public void linkImageToAlbum(int imageId, int albumId, int userId) throws SQLException {
 		String performedAction = "create record in image_album to link an image to an album";
-        String query = "INSERT INTO image_album (id_ima, id_alb, id_use) VALUES (?, ?, ?)";
+        String query = "INSERT INTO image_album (id_ima, id_alb, id_use, posizione) VALUES (?, ?, ?, ?)";
         PreparedStatement statement = null;
+        int posizione;
+        AlbumDAO albumDAO= new AlbumDAO(connection);
+        posizione = albumDAO.lastPositionUsed(albumId);
+        
+        
         try  {
         	statement = connection.prepareStatement(query);
             statement.setInt(1, imageId);
             statement.setInt(2, albumId);
             statement.setInt(3, userId);
+            statement.setInt(4, posizione);
             statement.executeUpdate();
         } catch (SQLException e) {
  	        throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");

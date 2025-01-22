@@ -26,13 +26,13 @@ body {
 
 /* Titoli */
 .titles h1 {
-	display: flex;
+    display: flex;
     font-size: 24px;
     margin-bottom: 10px;
     justify-content: center;
 }
 .titles h2 {
-	display: flex;
+    display: flex;
     font-size: 18px;
     color: #666;
     justify-content: center;
@@ -60,7 +60,7 @@ input[type="file"] {
     border-radius: 5px;
 }
 
-/* Pulsanti */
+/* Pulsanti generali */
 button {
     background-color: #007BFF;
     color: white;
@@ -95,11 +95,9 @@ button:hover {
     object-fit: cover;
     transition: transform 0.2s ease;
 }
-
 #imagesContainer img:hover {
     transform: scale(1.1);
 }
-
 
 /* Tabella degli album */
 .album-table table {
@@ -137,7 +135,29 @@ button:hover {
 
 /* Pulsanti di navigazione (Previous/Next) */
 .nav-buttons {
+    position: relative;   /* Contenitore posizionato */
     margin-bottom: 10px;
+    min-height: 40px;     /* Garantisce spazio verticale */
+}
+.nav-buttons #prevImagesBtn {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 10px; /* Spazio dai lati */
+}
+.nav-buttons #nextImagesBtn {
+    background-color: #007BFF;
+    color: white;
+    padding: 10px 20px;
+    border: none;
+    border-radius: 5px;
+    cursor: pointer;
+    font-weight: bold;
+    margin: 10px; /* Spazio dai lati */
 }
 
 /* Tabella 1x5 per le immagini dell'album */
@@ -152,7 +172,6 @@ button:hover {
     padding: 5px;
     border: 1px solid #ddd;
 }
-/* Resto invariato... */
 
 /* Sezione "not in album" */
 .not-in-album-section {
@@ -162,15 +181,12 @@ button:hover {
     border-radius: 5px;
     background-color: #fff;
 }
-
 .not-in-album-gallery {
     display: flex;
     flex-wrap: wrap;
     gap: 10px;
     margin-top: 10px;
 }
-
-/* Cliccabile */
 .not-in-album-gallery img {
     width: 120px;
     height: 120px;
@@ -182,6 +198,7 @@ button:hover {
 .not-in-album-gallery img:hover {
     transform: scale(1.1);
 }
+
 /* Modale overlay a schermo intero */
 .modal-overlay {
     position: fixed;
@@ -207,7 +224,7 @@ button:hover {
     overflow-y: auto; /* scorrimento se troppi commenti */
 }
 
-/* Bottone chiusura */
+/* Bottone chiusura modale */
 .close-modal {
     position: absolute;
     top: 10px;
@@ -225,7 +242,7 @@ button:hover {
     margin: 10px 0;
 }
 
-/* Sezione commenti */
+/* Sezione commenti nella modale */
 #modalComments {
     background-color: #f7f7f7;
     border: 1px solid #ccc;
@@ -235,6 +252,7 @@ button:hover {
 #modalComments .comment-item {
     margin-bottom: 8px;
 }
+
 /* Bottone "Delete Photo" */
 .delete-photo {
     background-color: #dc3545; /* rosso */
@@ -251,7 +269,7 @@ button:hover {
     margin-top: 10px;
 }
 
-/* Sezione reorder */
+/* Sezione reorder (drag & drop) */
 .reorder-section {
     margin-top: 20px;
     background-color: #fff;
@@ -278,4 +296,3 @@ button:hover {
 #reorderList li.drag-over {
     border: 2px dashed #007bff;
 }
-

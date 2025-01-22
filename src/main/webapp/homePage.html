@@ -36,7 +36,7 @@
         <div id="uploadResult"></div>
     </div>
 
-    <!-- Galleria immagini -->
+    <!-- Galleria immagini (Your Images) -->
     <div class="image-gallery">
         <h3>Your Images</h3>
         <div id="imagesContainer"></div>
@@ -98,18 +98,19 @@
         </div>
         <table id="selectedAlbumTable" class="thumbnail-grid">
             <tr>
-                <!-- 5 celle vuote da riempire dinamicamente -->
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
-                <td></td>
+                <!-- 5 celle -->
             </tr>
         </table>
+
+        <!-- Nuova sezione: Immagini non in questo album -->
+        <div class="not-in-album-section">
+            <h4>Images not in this album</h4>
+            <div id="notInAlbumContainer" class="not-in-album-gallery"></div>
+        </div>
     </div>
 
-    <!-- Script JS -->
     <script src="utils.js"></script>
     <script src="homePage.js"></script>
 </body>
 </html>
+

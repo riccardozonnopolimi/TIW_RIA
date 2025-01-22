@@ -1,4 +1,4 @@
-/* Generale */
+
 body {
     font-family: Arial, sans-serif;
     margin: 0;
@@ -7,7 +7,7 @@ body {
     color: #333;
 }
 
-/* Bottone Logout */
+
 .btn-logout {
     position: absolute;
     top: 20px;
@@ -24,7 +24,7 @@ body {
     background-color: #b52a36;
 }
 
-/* Titoli */
+
 .titles h1 {
     display: flex;
     font-size: 24px;
@@ -38,7 +38,7 @@ body {
     justify-content: center;
 }
 
-/* Form di upload e create album */
+
 .upload-form,
 .create-album-form {
     margin: 20px 0;
@@ -48,7 +48,7 @@ body {
     background-color: #fff;
 }
 
-/* Input e textarea */
+
 input[type="text"],
 textarea,
 input[type="file"] {
@@ -60,7 +60,7 @@ input[type="file"] {
     border-radius: 5px;
 }
 
-/* Pulsanti generali */
+
 button {
     background-color: #007BFF;
     color: white;
@@ -73,12 +73,10 @@ button:hover {
     background-color: #0056b3;
 }
 
-/* Sezione container principale per la galleria (può restare un blocco normale) */
 .image-gallery {
     margin: 20px 0;
 }
 
-/* #imagesContainer come flex container */
 #imagesContainer {
     display: flex;
     flex-wrap: wrap;
@@ -86,7 +84,6 @@ button:hover {
     justify-content: flex-start;
 }
 
-/* Stile delle immagini */
 #imagesContainer img {
     width: 150px;
     height: 150px;
@@ -99,7 +96,6 @@ button:hover {
     transform: scale(1.1);
 }
 
-/* Tabella degli album */
 .album-table table {
     width: 100%;
     border-collapse: collapse;
@@ -114,7 +110,6 @@ button:hover {
     background-color: #f2f2f2;
 }
 
-/* Link cliccabile sul titolo dell'album */
 .album-title-link {
     color: #007BFF;
     text-decoration: underline;
@@ -124,7 +119,6 @@ button:hover {
     color: #0056b3;
 }
 
-/* Blocco delle immagini di un album selezionato */
 .album-images-block {
     margin-top: 20px;
     padding: 15px;
@@ -133,13 +127,12 @@ button:hover {
     background-color: #fff;
 }
 
-/* Pulsanti di navigazione (Previous/Next) */
 .nav-buttons {
     display: flex;
-    justify-content: center; /* Bottoni ai lati */
+    justify-content: center; 
     align-items: center;
     margin-top: 20px;
-    padding: 10px 0;    /* Garantisce spazio verticale */
+    padding: 10px 0;    
 }
 .nav-buttons #prevImagesBtn {
     background-color: #007BFF;
@@ -149,7 +142,7 @@ button:hover {
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    margin: 10px; /* Spazio dai lati */
+    margin: 10px; 
 }
 .nav-buttons #nextImagesBtn {
     background-color: #007BFF;
@@ -159,10 +152,9 @@ button:hover {
     border-radius: 5px;
     cursor: pointer;
     font-weight: bold;
-    margin: 10px; /* Spazio dai lati */
+    margin: 10px;
 }
 
-/* Tabella 1x5 per le immagini dell'album */
 .thumbnail-grid {
     width: 100%;
     border-collapse: collapse;
@@ -175,7 +167,6 @@ button:hover {
     border: 1px solid #ddd;
 }
 
-/* Sezione "not in album" */
 .not-in-album-section {
     margin-top: 20px;
     padding: 10px;
@@ -201,32 +192,29 @@ button:hover {
     transform: scale(1.1);
 }
 
-/* Modale overlay a schermo intero */
 .modal-overlay {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background-color: rgba(0,0,0,0.5); /* sfondo semi-trasparente */
+    background-color: rgba(0,0,0,0.5); 
     display: flex;
     align-items: center;
     justify-content: center;
-    z-index: 9999; /* in primo piano */
+    z-index: 9999; 
 }
 
-/* Contenuto della modale */
 .modal-content {
     position: relative;
     background-color: #fff;
     padding: 20px;
     border-radius: 5px;
-    width: 600px; /* larghezza fissa o come preferisci */
+    width: 600px; 
     max-height: 80%;
-    overflow-y: auto; /* scorrimento se troppi commenti */
+    overflow-y: auto; 
 }
 
-/* Bottone chiusura modale */
 .close-modal {
     position: absolute;
     top: 10px;
@@ -244,7 +232,6 @@ button:hover {
     margin: 10px 0;
 }
 
-/* Sezione commenti nella modale */
 #modalComments {
     background-color: #f7f7f7;
     border: 1px solid #ccc;
@@ -255,9 +242,8 @@ button:hover {
     margin-bottom: 8px;
 }
 
-/* Bottone "Delete Photo" */
 .delete-photo {
-    background-color: #dc3545; /* rosso */
+    background-color: #dc3545; 
     color: #fff;
     margin-top: 10px;
     display: inline-block;
@@ -266,12 +252,10 @@ button:hover {
     background-color: #b52a36;
 }
 
-/* Bottone "Modify Order" */
 .modify-order {
     margin-top: 10px;
 }
 
-/* Sezione reorder (drag & drop) */
 .reorder-section {
     margin-top: 20px;
     background-color: #fff;
@@ -280,7 +264,6 @@ button:hover {
     border-radius: 5px;
 }
 
-/* Lista per drag & drop */
 #reorderList {
     list-style-type: none;
     padding-left: 0;
@@ -290,11 +273,10 @@ button:hover {
     margin: 5px 0;
     padding: 8px;
     border: 1px solid #ddd;
-    cursor: move; /* segnale di drag */
+    cursor: move; 
     background-color: #f9f9f9;
 }
 
-/* Durante il drag, evidenziare la destinazione */
 #reorderList li.drag-over {
     border: 2px dashed #007bff;
 }

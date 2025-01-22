@@ -1,15 +1,32 @@
+/**
+ * homePage.js
+ * 
+ * - Controllo login via sessionStorage
+ * - Carica myImages, myAlbums, otherAlbums
+ * - Visualizza "Your Images" in orizzontale
+ * - Visualizzazione album selezionato (paginazione 5×volta)
+ * - Sezione "not in album" (aggiunta immagine all'album)
+ * - Finestra modale con immagine grande, commenti, form per aggiungere commenti
+ * - Eliminazione foto ("Delete Photo" => DeletePhoto)
+ * - Riordino album ("Modify Order" => drag & drop => "Save Order" => UpdateOrder)
+ */
+
 document.addEventListener("DOMContentLoaded", function () {
-    // -------------- Elementi base ---------------
+    // ----------------------------------------------------------------
+    // Riferimenti a elementi nella pagina
+    // ----------------------------------------------------------------
     const logoutBtn = document.getElementById("logoutBtn");
     const usernameSpan = document.getElementById("username");
 
+    // Form upload
     const uploadForm = document.getElementById("uploadForm");
     const uploadResult = document.getElementById("uploadResult");
 
+    // Form create album
     const createAlbumForm = document.getElementById("createAlbumForm");
     const createAlbumResult = document.getElementById("createAlbumResult");
 
-    // Sezione album selezionato
+    // Sezione visualizzazione album
     const selectedAlbumView = document.getElementById("selectedAlbumView");
     const selectedAlbumTitle = document.getElementById("selectedAlbumTitle");
     const selectedAlbumTable = document.getElementById("selectedAlbumTable");
@@ -17,7 +34,13 @@ document.addEventListener("DOMContentLoaded", function () {
     const nextImagesBtn = document.getElementById("nextImagesBtn");
     const notInAlbumContainer = document.getElementById("notInAlbumContainer");
 
-    // Modale
+    // Bottone e sezione per riordino
+    const modifyOrderBtn = document.getElementById("modifyOrderBtn");
+    const reorderSection = document.getElementById("reorderSection");
+    const reorderList = document.getElementById("reorderList");
+    const saveOrderBtn = document.getElementById("saveOrderBtn");
+
+    // Finestra modale
     const modalOverlay = document.getElementById("modalOverlay");
     const imageModal = document.getElementById("imageModal");
     const closeModalBtn = document.getElementById("closeModalBtn");
@@ -27,18 +50,26 @@ document.addEventListener("DOMContentLoaded", function () {
     const modalComments = document.getElementById("modalComments");
     const modalCommentForm = document.getElementById("modalCommentForm");
     const modalCommentText = document.getElementById("modalCommentText");
+    const deletePhotoBtn = document.getElementById("deletePhotoBtn");
 
-    // Variabili globali
+    // ----------------------------------------------------------------
+    // Variabili globali e stato
+    // ----------------------------------------------------------------
     let myImages = [];
     let myAlbums = [];
     let otherAlbums = [];
 
-    // Stato album
+    // Stato album selezionato
     let currentAlbumImages = [];
     let currentAlbumPage = 0;
     let currentAlbumId = null;
 
-    // Check login
+    // Per il drag & drop (riordino)
+    let dragSrcEl = null;
+
+    // ----------------------------------------------------------------
+    // 1. Controllo login
+    // ----------------------------------------------------------------
     const username = sessionStorage.getItem("username");
     if (!username) {
         window.location.href = "login.html";
@@ -46,33 +77,48 @@ document.addEventListener("DOMContentLoaded", function () {
     }
     usernameSpan.textContent = username;
 
-    // Carichiamo i dati
+    // ----------------------------------------------------------------
+    // 2. Caricamento dati da sessionStorage
+    // ----------------------------------------------------------------
     myImages = JSON.parse(sessionStorage.getItem("myImages") || "[]");
     myAlbums = JSON.parse(sessionStorage.getItem("myAlbums") || "[]");
     otherAlbums = JSON.parse(sessionStorage.getItem("otherAlbums") || "[]");
 
-    // Popolamento iniziale
+    // ----------------------------------------------------------------
+    // 3. Visualizzazioni iniziali
+    // ----------------------------------------------------------------
     populateImages(myImages);
     populateAlbums(myAlbums);
     populateOtherAlbums(otherAlbums);
 
-    // Logout
-    logoutBtn.addEventListener("click", function () {
-        sessionStorage.clear();
-        window.location.href = "login.html";
-    });
+	logoutBtn.addEventListener("click", function () {
+	    // Richiama la servlet Logout
+	    makeCall("GET", "Logout", null, function (req) {
+	        if (req.readyState === XMLHttpRequest.DONE) {
+	            if (req.status === 200) {
+	                // Se la servlet ha invalidato la sessione con successo
+	                sessionStorage.clear();
+	                window.location.href = "login.html";
+	            } else {
+	                // Gestione di eventuali errori
+	                alert("Error during logout: " + req.status);
+	            }
+	        }
+	    });
+	});
 
-    // ========================
-    // Upload Photo
-    // ========================
+    // ----------------------------------------------------------------
+    // UPLOAD PHOTO
+    // ----------------------------------------------------------------
     uploadForm.addEventListener("submit", function (event) {
         event.preventDefault();
         let formData = new FormData(uploadForm);
+        // POST -> /UploadPhoto
         makeFormDataCall("POST", "UploadPhoto", formData, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
                     uploadResult.textContent = "Image uploaded successfully!";
-                    // Ricarichiamo /GetImages
+                    // Richiamiamo /GetImages per aggiornare myImages
                     makeCall("GET", "GetImages", null, function (req2) {
                         if (req2.readyState === XMLHttpRequest.DONE) {
                             if (req2.status === 200) {
@@ -80,30 +126,30 @@ document.addEventListener("DOMContentLoaded", function () {
                                 sessionStorage.setItem("myImages", JSON.stringify(myImages));
                                 populateImages(myImages);
                             } else {
-                                uploadResult.textContent = 
-                                    "Error getting updated images: " + req2.status;
+                                uploadResult.textContent = "Error getting updated images: " + req2.status;
                             }
                         }
                     });
                 } else {
-                    let errorMsg = req.status === 401 
+                    let err = req.status === 401 
                         ? "Unauthorized: please log in again."
                         : (req.responseText || "Upload failed");
-                    uploadResult.textContent = errorMsg;
+                    uploadResult.textContent = err;
                 }
             }
         });
     });
 
-    // ========================
-    // Create Album
-    // ========================
+    // ----------------------------------------------------------------
+    // CREATE ALBUM
+    // ----------------------------------------------------------------
     createAlbumForm.addEventListener("submit", function (event) {
         event.preventDefault();
         makeFormCall("POST", "CreateAlbum", createAlbumForm, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
                     createAlbumResult.textContent = "Album created successfully!";
+                    // Ricarichiamo /GetAlbums
                     makeCall("GET", "GetAlbums", null, function (req2) {
                         if (req2.readyState === XMLHttpRequest.DONE) {
                             if (req2.status === 200) {
@@ -111,33 +157,30 @@ document.addEventListener("DOMContentLoaded", function () {
                                 sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
                                 populateAlbums(myAlbums);
                             } else {
-                                createAlbumResult.textContent = 
-                                    "Error getting updated albums: " + req2.status;
+                                createAlbumResult.textContent = "Error getting updated albums: " + req2.status;
                             }
                         }
                     });
                 } else {
-                    let errorMessage = req.status === 401
+                    let errMsg = req.status === 401
                         ? "Unauthorized: please log in again."
                         : (req.responseText || "Album creation failed");
-                    createAlbumResult.textContent = errorMessage;
+                    createAlbumResult.textContent = errMsg;
                 }
             }
         });
     });
 
-    // ========================
-    // Sezione "Your Images" (orizzontale)
-    // ========================
+    // ----------------------------------------------------------------
+    // VISUALIZZAZIONE "YOUR IMAGES"
+    // ----------------------------------------------------------------
     function populateImages(imagesArray) {
         const imagesContainer = document.getElementById("imagesContainer");
         imagesContainer.innerHTML = "";
-
         if (!imagesArray || imagesArray.length === 0) {
             imagesContainer.textContent = "No images found.";
             return;
         }
-
         imagesArray.forEach(img => {
             const div = document.createElement("div");
             div.classList.add("image-item");
@@ -154,22 +197,20 @@ document.addEventListener("DOMContentLoaded", function () {
             imgTag.src = "DownloadPhoto?imageId=" + img.id_immagine;
             imgTag.alt = img.titolo;
             imgTag.classList.add("thumbnail");
-
-            // Se volessimo la modale anche qui: 
-            // potremmo aggiungere un onmouseover => showModalImage(img)
-            // Oppure lasciamo come da specifica "nell'album"
+            // Potresti aggiungere un eventListener per aprire la modale,
+            // ma da specifica la modale appare nelle immagini dell'album.
             div.appendChild(imgTag);
+
             imagesContainer.appendChild(div);
         });
     }
 
-    // ========================
-    // Sezione "My Albums" e "Other Albums"
-    // ========================
+    // ----------------------------------------------------------------
+    // VISUALIZZAZIONE DEGLI ALBUM (myAlbums e otherAlbums)
+    // ----------------------------------------------------------------
     function populateAlbums(albumsArray) {
         const albumTableBody = document.getElementById("albumTableBody");
         albumTableBody.innerHTML = "";
-
         if (!albumsArray || albumsArray.length === 0) {
             const row = document.createElement("tr");
             const cell = document.createElement("td");
@@ -179,7 +220,6 @@ document.addEventListener("DOMContentLoaded", function () {
             albumTableBody.appendChild(row);
             return;
         }
-
         albumsArray.forEach(album => {
             const row = document.createElement("tr");
 
@@ -191,7 +231,7 @@ document.addEventListener("DOMContentLoaded", function () {
             const titleSpan = document.createElement("span");
             titleSpan.classList.add("album-title-link");
             titleSpan.textContent = album.titolo;
-            // click => showAlbumImages
+            // Al click => showAlbumImages
             titleSpan.addEventListener("click", function () {
                 showAlbumImages(album);
             });
@@ -204,7 +244,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const dateCell = document.createElement("td");
             dateCell.textContent = album.data_creazione 
-                ? new Date(album.data_creazione).toLocaleString() 
+                ? new Date(album.data_creazione).toLocaleString()
                 : "";
             row.appendChild(dateCell);
 
@@ -214,7 +254,6 @@ document.addEventListener("DOMContentLoaded", function () {
     function populateOtherAlbums(albumsArray) {
         const otherAlbumTableBody = document.getElementById("otherAlbumTableBody");
         otherAlbumTableBody.innerHTML = "";
-
         if (!albumsArray || albumsArray.length === 0) {
             const row = document.createElement("tr");
             const cell = document.createElement("td");
@@ -224,7 +263,6 @@ document.addEventListener("DOMContentLoaded", function () {
             otherAlbumTableBody.appendChild(row);
             return;
         }
-
         albumsArray.forEach(album => {
             const row = document.createElement("tr");
 
@@ -248,8 +286,8 @@ document.addEventListener("DOMContentLoaded", function () {
             row.appendChild(creatorCell);
 
             const dateCell = document.createElement("td");
-            dateCell.textContent = album.data_creazione 
-                ? new Date(album.data_creazione).toLocaleString() 
+            dateCell.textContent = album.data_creazione
+                ? new Date(album.data_creazione).toLocaleString()
                 : "";
             row.appendChild(dateCell);
 
@@ -257,10 +295,11 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ========================
-    // showAlbumImages => blocco 1x5 + notInAlbum
-    // ========================
+    // ----------------------------------------------------------------
+    // showAlbumImages => visualizza l'album in selectedAlbumView
+    // ----------------------------------------------------------------
     function showAlbumImages(album) {
+        // Mostra la sezione
         selectedAlbumView.style.display = "block";
         selectedAlbumTitle.textContent = `Images of Album: ${album.titolo}`;
 
@@ -270,13 +309,19 @@ document.addEventListener("DOMContentLoaded", function () {
 
         renderAlbumImages();
 
+        // Sezione "not in album"
         let notInAlbum = computeNotInAlbumImages(album.immagini || []);
         populateNotInAlbumImages(notInAlbum, album.id_album);
+
+        // Mostra bottone "Modify Order"
+        modifyOrderBtn.style.display = "inline-block";
+        // Chiudiamo la sezione reorder, se era aperta
+        reorderSection.style.display = "none";
     }
 
     function computeNotInAlbumImages(albumImages) {
-        const albumImageIds = new Set(albumImages.map(i => i.id_immagine));
-        return myImages.filter(i => !albumImageIds.has(i.id_immagine));
+        let albumImageIds = new Set(albumImages.map(i => i.id_immagine));
+        return myImages.filter(img => !albumImageIds.has(img.id_immagine));
     }
 
     function populateNotInAlbumImages(imagesArray, albumId) {
@@ -287,7 +332,6 @@ document.addEventListener("DOMContentLoaded", function () {
             notInAlbumContainer.appendChild(p);
             return;
         }
-
         imagesArray.forEach(img => {
             let thumb = document.createElement("img");
             thumb.src = "DownloadPhoto?imageId=" + img.id_immagine;
@@ -318,7 +362,6 @@ document.addEventListener("DOMContentLoaded", function () {
                             if (req2.status === 200) {
                                 myAlbums = JSON.parse(req2.responseText);
                                 sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
-                                // Cerchiamo l'album
                                 let foundAlbum = myAlbums.find(a => a.id_album === albumId);
                                 if (foundAlbum) {
                                     showAlbumImages(foundAlbum);
@@ -337,15 +380,14 @@ document.addEventListener("DOMContentLoaded", function () {
         });
     }
 
-    // ========================
-    // Paginazione (1 x 5)
-    // ========================
+    // ----------------------------------------------------------------
+    // Paginazione: renderAlbumImages
+    // ----------------------------------------------------------------
     function renderAlbumImages() {
         const row = selectedAlbumTable.querySelector("tr");
         while (row.firstChild) {
             row.removeChild(row.firstChild);
         }
-
         let startIndex = currentAlbumPage * 5;
         let endIndex = startIndex + 5;
         let slice = currentAlbumImages.slice(startIndex, endIndex);
@@ -361,15 +403,10 @@ document.addEventListener("DOMContentLoaded", function () {
                 thumb.style.height = "100px";
                 thumb.style.cursor = "pointer";
 
-                // MOUSEOVER => showModalImage con i dettagli
+                // Mouseover => apri modale con dettagli
                 thumb.addEventListener("mouseover", function () {
-                    // Apriamo modale e mostriamo dettagli
                     showModalImage(imgObj);
                 });
-
-                // Se vogliamo che la modale si chiuda al mouseout,
-                // potremmo aggiungere un eventListener "mouseout" => hideModal(),
-                // ma in genere si usa un "click" per aprire e un bottone "x" per chiudere.
 
                 let titleElem = document.createElement("div");
                 titleElem.textContent = imgObj.titolo;
@@ -380,7 +417,6 @@ document.addEventListener("DOMContentLoaded", function () {
             row.appendChild(cell);
         }
 
-        // Bottoni
         prevImagesBtn.disabled = (currentAlbumPage === 0);
         let maxPage = Math.floor((currentAlbumImages.length - 1) / 5);
         nextImagesBtn.disabled = (currentAlbumPage >= maxPage);
@@ -400,22 +436,23 @@ document.addEventListener("DOMContentLoaded", function () {
         }
     });
 
-    // ========================
-    // Modal con immagine + commenti + form comment
-    // ========================
+    // ----------------------------------------------------------------
+    // Modale (immagine grande, commenti, form commento, delete)
+    // ----------------------------------------------------------------
     function showModalImage(imgObj) {
-        // Riempiamo i campi
+        // Riempi campi
         modalImage.src = "DownloadPhoto?imageId=" + imgObj.id_immagine;
         modalImageTitle.textContent = imgObj.titolo;
         modalImageDesc.textContent = imgObj.descrizione || "";
 
-        // Puliamo e mostriamo i commenti
+        // Mostriamo i commenti
         populateModalComments(imgObj.commenti || []);
-        
-        // Salviamo id_immagine su un attributo data
-        modalCommentForm.dataset.imageId = imgObj.id_immagine;
 
-        // Apriamo la modale
+        // Salviamo info su data-attributes
+        modalCommentForm.dataset.imageId = imgObj.id_immagine;
+        deletePhotoBtn.dataset.imageId = imgObj.id_immagine;
+
+        // Apri modale
         modalOverlay.style.display = "flex";
     }
 
@@ -428,12 +465,11 @@ document.addEventListener("DOMContentLoaded", function () {
         commentiArray.forEach(c => {
             let div = document.createElement("div");
             div.classList.add("comment-item");
-            div.textContent = c.username + ": " + c.testo; // + data_creazione se vuoi
+            div.textContent = c.username + ": " + c.testo;
             modalComments.appendChild(div);
         });
     }
 
-    // Chiudi modale
     closeModalBtn.addEventListener("click", function () {
         hideModal();
     });
@@ -441,9 +477,7 @@ document.addEventListener("DOMContentLoaded", function () {
         modalOverlay.style.display = "none";
     }
 
-    // ========================
-    // Gestione form commenti nella modale
-    // ========================
+    // Form comment
     modalCommentForm.addEventListener("submit", function (e) {
         e.preventDefault();
         let testo = modalCommentText.value.trim();
@@ -452,36 +486,33 @@ document.addEventListener("DOMContentLoaded", function () {
             return;
         }
         let imageId = modalCommentForm.dataset.imageId;
-        // Serve anche l'albumId => currentAlbumId
-        // GET /AddComment?imageId=...&albumId=...&testo=...
-        let url = "AddComment?imageId=" + imageId + "&albumId=" + currentAlbumId + 
-                  "&testo=" + encodeURIComponent(testo);
+        let url = "AddComment?imageId=" + imageId 
+                + "&albumId=" + currentAlbumId
+                + "&testo=" + encodeURIComponent(testo);
 
         makeCall("GET", url, null, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
-                    // Ricarichiamo /GetAlbums per avere il commento aggiornato
-                    makeCall("GET", "GetAlbums", null, function (req2) {
-                        if (req2.readyState === XMLHttpRequest.DONE) {
-                            if (req2.status === 200) {
-                                myAlbums = JSON.parse(req2.responseText);
+                    // Reload albums
+                    makeCall("GET", "GetAlbums", null, function (r2) {
+                        if (r2.readyState === XMLHttpRequest.DONE) {
+                            if (r2.status === 200) {
+                                myAlbums = JSON.parse(r2.responseText);
                                 sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
-                                // Troviamo l'album con currentAlbumId
-                                let foundAlbum = myAlbums.find(a => a.id_album === currentAlbumId);
+                                // Cerchiamo l'album
+                                let foundAlbum = myAlbums.find(a => a.id_album == currentAlbumId);
                                 if (foundAlbum) {
-                                    // Troviamo l'immagine aggiornata
+                                    // Cerchiamo l'immagine aggiornata
                                     let updatedImg = foundAlbum.immagini.find(i => i.id_immagine == imageId);
                                     if (updatedImg) {
-                                        // Ricarichiamo i commenti
                                         populateModalComments(updatedImg.commenti || []);
                                     }
                                 }
                             } else {
-                                alert("Error reloading albums: " + req2.status);
+                                alert("Error reloading albums: " + r2.status);
                             }
                         }
                     });
-                    // Puliamo il textarea
                     modalCommentText.value = "";
                 } else if (req.status === 401) {
                     alert("Unauthorized, please log in again.");
@@ -491,4 +522,158 @@ document.addEventListener("DOMContentLoaded", function () {
             }
         });
     });
+
+    // Delete Photo
+    deletePhotoBtn.addEventListener("click", function () {
+        hideModal();
+        let imageId = deletePhotoBtn.dataset.imageId;
+        let url = "DeletePhoto?albumId=" + currentAlbumId + "&imageId=" + imageId;
+        makeCall("GET", url, null, function (req) {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    // Ricarichiamo albums e images
+                    makeCall("GET", "GetAlbums", null, function (r2) {
+                        if (r2.readyState === XMLHttpRequest.DONE) {
+                            if (r2.status === 200) {
+                                myAlbums = JSON.parse(r2.responseText);
+                                sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
+                                // Cerchiamo l'album
+                                let foundAlbum = myAlbums.find(a => a.id_album === currentAlbumId);
+
+                                // Ricarichiamo "myImages"
+                                makeCall("GET", "GetImages", null, function (r3) {
+                                    if (r3.readyState === XMLHttpRequest.DONE) {
+                                        if (r3.status === 200) {
+                                            myImages = JSON.parse(r3.responseText);
+                                            sessionStorage.setItem("myImages", JSON.stringify(myImages));
+                                            populateImages(myImages);
+
+                                            if (foundAlbum) {
+                                                showAlbumImages(foundAlbum);
+                                            }
+                                        } else {
+                                            alert("Error reloading images: " + r3.status);
+                                        }
+                                    }
+                                });
+                            } else {
+                                alert("Error reloading albums: " + r2.status);
+                            }
+                        }
+                    });
+                } else if (req.status === 401) {
+                    alert("Unauthorized, please log in again.");
+                } else {
+                    alert("Error deleting photo: " + req.status);
+                }
+            }
+        });
+    });
+
+    // ----------------------------------------------------------------
+    // GESTIONE RIORDINO ("Modify Order" => drag & drop => "Save Order")
+    // ----------------------------------------------------------------
+    modifyOrderBtn.addEventListener("click", function() {
+        // Popoliamo la lista <ul> #reorderList con i titoli di currentAlbumImages
+        reorderList.innerHTML = "";
+        currentAlbumImages.forEach(img => {
+            let li = document.createElement("li");
+            li.textContent = img.titolo;
+            li.dataset.imageId = img.id_immagine;
+
+            // drag & drop
+            li.draggable = true;
+            li.addEventListener("dragstart", handleDragStart);
+            li.addEventListener("dragover", handleDragOver);
+            li.addEventListener("dragleave", handleDragLeave);
+            li.addEventListener("drop", handleDrop);
+            li.addEventListener("dragend", handleDragEnd);
+
+            reorderList.appendChild(li);
+        });
+
+        reorderSection.style.display = "block";
+    });
+
+    let dragEnteredItem = null;
+
+    function handleDragStart(e) {
+        dragSrcEl = this;
+        e.dataTransfer.effectAllowed = "move";
+        e.dataTransfer.setData("text/plain", this.dataset.imageId); 
+        this.style.opacity = "0.4";
+    }
+    function handleDragOver(e) {
+        e.preventDefault(); // per consentire il drop
+        return false;
+    }
+    function handleDrop(e) {
+        e.stopPropagation();
+        if (dragSrcEl !== this) {
+            let list = this.parentNode;
+            list.insertBefore(dragSrcEl, this);
+        }
+        return false;
+    }
+    function handleDragLeave(e) {
+        this.classList.remove("drag-over");
+    }
+    function handleDragEnd(e) {
+        this.style.opacity = "1";
+        // Rimuoviamo classi
+        let items = reorderList.querySelectorAll("li");
+        items.forEach(item => item.classList.remove("drag-over"));
+    }
+
+    // Save Order
+    saveOrderBtn.addEventListener("click", function() {
+        // Ricostruiamo la sequenza di id_immagine
+        let liElements = reorderList.querySelectorAll("li");
+        let orderArray = [];
+        liElements.forEach(li => {
+            orderArray.push(li.dataset.imageId);
+        });
+        let orderStr = orderArray.join(",");
+        let url = "UpdateOrder?albumId=" + currentAlbumId + "&order=" + orderStr;
+
+        makeCall("GET", url, null, function(req) {
+            if (req.readyState === XMLHttpRequest.DONE) {
+                if (req.status === 200) {
+                    // Ricarichiamo /GetAlbums e /GetImages
+                    makeCall("GET", "GetAlbums", null, function(r2) {
+                        if (r2.readyState === XMLHttpRequest.DONE) {
+                            if (r2.status === 200) {
+                                myAlbums = JSON.parse(r2.responseText);
+                                sessionStorage.setItem("myAlbums", JSON.stringify(myAlbums));
+
+                                makeCall("GET", "GetImages", null, function(r3) {
+                                    if (r3.readyState === XMLHttpRequest.DONE) {
+                                        if (r3.status === 200) {
+                                            myImages = JSON.parse(r3.responseText);
+                                            sessionStorage.setItem("myImages", JSON.stringify(myImages));
+                                            populateImages(myImages);
+
+                                            let foundAlbum = myAlbums.find(a => a.id_album == currentAlbumId);
+                                            if (foundAlbum) {
+                                                showAlbumImages(foundAlbum);
+                                            }
+                                        } else {
+                                            alert("Error reloading images: " + r3.status);
+                                        }
+                                    }
+                                });
+                            } else {
+                                alert("Error reloading albums: " + r2.status);
+                            }
+                        }
+                    });
+                } else if (req.status === 401) {
+                    alert("Unauthorized, please log in again.");
+                } else {
+                    alert("Error updating order: " + req.status);
+                }
+            }
+        });
+    });
 });
+

@@ -47,15 +47,19 @@ public class AlbumDAO {
 
 	            // Inizializza l'array di ID delle immagini
 	            if (totaleImmagini > 0) {
+	            	boolean flag = false;
 	                int[] id_immagini = new int[totaleImmagini];
 	                Immagine[] immagini = new Immagine[totaleImmagini];
-
+	                int[] posizioni = new int[album.getTotale_immagini()];
 	                try (PreparedStatement statement2 = connection.prepareStatement(queryImages)) {
 	                    statement2.setInt(1, id_album);
 	                    try (ResultSet result2 = statement2.executeQuery()) {
 	                        int index = 0;
 	                        while (result2.next() && index < totaleImmagini) {
 	                            id_immagini[index] = result2.getInt("id_ima");
+	        	                posizioni[index] = result2.getInt("posizione");
+	        	                if(posizioni[index] > 0)
+	        	                   	flag = true;
 	                            index++;
 	                        }
 	                    }
@@ -68,7 +72,8 @@ public class AlbumDAO {
 	                }
 
 	                album.setId_immagini(id_immagini);
-	                album.setImmagini(orderImage(immagini));
+	                immagini = orderImage(immagini, flag,posizioni);
+	                album.setImmagini(immagini);
 	                album.setImmagini(immagini);
 	            }
 	        }
@@ -313,11 +318,16 @@ public class AlbumDAO {
  	                statement2 = connection.prepareStatement(query2);
  	                statement2.setInt(1, album.getId_album());
  	                result2 = statement2.executeQuery();
+ 	                boolean flag = false;
 
  	                int j = 0;
  	                int[] id_immagini = new int[album.getTotale_immagini()];
+ 	                int[] posizioni = new int[album.getTotale_immagini()];
  	                while (result2.next()) {
  	                    id_immagini[j] = result2.getInt("id_ima");
+ 	                    posizioni[j] = result2.getInt("posizione");
+ 	                    if(posizioni[j] > 0)
+ 	                    	flag = true;
  	                    j++;
  	                }
 
@@ -331,7 +341,8 @@ public class AlbumDAO {
  	                for(int a = 0; a < album.getTotale_immagini(); a++) {
  	                	System.out.println(immagini[a].getId_immagine());
  	                }
- 	                album.setImmagini(orderImage(immagini));
+ 	                immagini = orderImage(immagini, flag, posizioni);
+ 	                album.setImmagini(immagini);
  	               System.out.println("stampo album dopo ordinamento ID: " + album.getId_album() );
 	                for(int a = 0; a < album.getTotale_immagini(); a++) {
 	                	System.out.println(album.getImmagini()[a].getId_immagine());
@@ -405,11 +416,11 @@ public class AlbumDAO {
             }
 	}
  	
-	private static Immagine[] orderImage(Immagine[] immagini) {
+	private static Immagine[] orderImage(Immagine[] immagini, boolean personalizzato, int[] posizioni) {
         if (immagini == null || immagini.length == 0) {
             return null;  // Se l'array è nullo o vuoto, esce senza fare nulla
         }
-
+        if(!personalizzato) {
         Arrays.sort(immagini, new Comparator<Immagine>() {
             @Override
             public int compare(Immagine img1, Immagine img2) {
@@ -417,7 +428,64 @@ public class AlbumDAO {
                 return img2.getData_creazione().compareTo(img1.getData_creazione());
             }
         });
+        }
+        else {
+        	 Immagine[] finale = new Immagine[posizioni.length];
+        	 for(int i = 0; i < posizioni.length; i++) {
+        		 finale[posizioni[i]] = immagini[i];
+        	 }
+        	 return finale;
+        }
         return immagini;
     }
+	
+	//Dato albumId e un array di int ([101, 55, 72, 80]), 
+	//il DAO aggiorna il campo posizione nella tabella, 
+	//in modo che la prima immagine abbia posizione=0, la seconda=1, e così via.
+	public void setOrder(int albumId, int[] orderArray) throws SQLException {
+		String performedAction = "updating order of images in album";
+	    String query = "UPDATE image_album SET posizione = ? WHERE id_alb = ? AND id_ima = ?";
+	    PreparedStatement statement = null;
+	    
+	    try {
+	    	for(int i = 0; i < orderArray.length; i++) {
+	    	statement = connection.prepareStatement(query);
+	        statement.setInt(1, i);
+	        statement.setInt(2, albumId);
+	        statement.setInt(3, orderArray[i]);
+	        statement.executeUpdate();
+	    	}
+	        }catch (SQLException e) {
+	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
+	        } finally {
+	     		statement.close();
+            }
+	    
+		
+	}
+
+	public boolean checkAlbumOwner(int albumId, int id_user) throws SQLException {
+		
+		String performedAction = "check if id_user is owner of albumId";
+	    String query = "SELECT creatore FROM album WHERE id_album = ?";
+	    PreparedStatement statement = null;
+	    ResultSet result = null;
+	    boolean isOwner = false;
+	    try {
+	    	statement = connection.prepareStatement(query);
+	        statement.setInt(1, albumId);
+	        result = statement.executeQuery();
+	        while(result.next()) {
+	        	if(result.getInt("creatore") == id_user)
+	        		isOwner = true;
+	        }
+	        }catch (SQLException e) {
+	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
+	        } finally {
+	     		closeResources(result, statement);
+            }
+		
+		return isOwner;
+	}
  	
 }

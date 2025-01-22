@@ -1,28 +1,29 @@
 package it.polimi.tiw.controllers;
 
+import java.io.File;
 import java.io.IOException;
 import java.sql.Connection;
 import java.sql.SQLException;
-
 import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
-import javax.servlet.http.HttpServletResponse;
-import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
 
+import it.polimi.tiw.DAO.AlbumDAO;
 import it.polimi.tiw.DAO.CommentoDAO;
 import it.polimi.tiw.DAO.ImmagineDAO;
-import it.polimi.tiw.beans.User;
 import it.polimi.tiw.util.ConnectionHandler;
 
-@WebServlet("/AddComment")
-public class AddComment extends HttpServlet {
+import javax.servlet.http.HttpServletRequest;
+import javax.servlet.http.HttpServletResponse;
+import javax.servlet.http.HttpSession;
+
+@WebServlet("/DeletePhoto")
+public class DeletePhoto extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection;
 
-    public AddComment() {
+    public DeletePhoto() {
         super();
     }
 
@@ -41,14 +42,12 @@ public class AddComment extends HttpServlet {
         }
     }
 
-    /**
-     * Esempio: GET /AddComment?imageId=xxx&albumId=yyy&testo=COMMENTO
-     */
+    // GET => /DeletePhoto?albumId=xxx&imageId=yyy
     @Override
-    protected void doGet(HttpServletRequest request, HttpServletResponse response)
+    protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
 
-        // Check session
+        // Check login
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -56,37 +55,47 @@ public class AddComment extends HttpServlet {
         }
 
         // Recupera parametri
-        String testo = request.getParameter("testo");
-        String imageIdParam = request.getParameter("imageId");
         
-
-        if (testo == null || imageIdParam == null || testo.isBlank() || imageIdParam.isBlank()) {
-            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
-            return;
-        }
-
+        String imageIdStr = request.getParameter("imageId");
         int imageId;
         try {
-            imageId = Integer.parseInt(imageIdParam);
+            imageId = Integer.parseInt(imageIdStr);
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // Info utente
-        User currentUser = (User) session.getAttribute("currentUser");
-        int userId = currentUser.getId_user();
-        String username = currentUser.getUsername();
-
         CommentoDAO commentoDAO = new CommentoDAO(connection);
         ImmagineDAO immagineDAO = new ImmagineDAO(connection);
+        AlbumDAO albumDAO = new AlbumDAO(connection);
 
         try {
-            // Crea il commento
-            commentoDAO.createCommento(testo, userId, imageId, username);
+            // 1. Recupera il percorso fisico dal DB
+            String filePath = immagineDAO.getImagePathById(imageId);
+            if (filePath == null) {
+                response.setStatus(HttpServletResponse.SC_NOT_FOUND);
+                return;
+            }
 
-            // Aggiorna contatore commenti in tabella immagine (se necessario)
-            immagineDAO.updateTotCommentiByImageId(imageId);
+            // 2. Elimina tutti i commenti su quell’immagine
+            commentoDAO.deleteAllCommentsByImageId(imageId);
+
+            // 3. Decrementa il conteggio dell'album, se necessario
+            albumDAO.decrementAlbumImageCount(imageId);
+
+            // 4. Rimuove i link image_album
+            immagineDAO.delinkImageToAlbum(imageId);
+
+            // 5. Elimina l’immagine dal DB
+            immagineDAO.deleteImageById(imageId);
+
+            // 6. Elimina fisicamente il file
+            File file = new File(filePath);
+            if (file.exists()) {
+                if (!file.delete()) {
+                    System.err.println("Errore: non è stato possibile eliminare il file " + filePath);
+                }
+            }
 
             response.setStatus(HttpServletResponse.SC_OK);
 
@@ -96,11 +105,9 @@ public class AddComment extends HttpServlet {
         }
     }
 
-    /**
-     * Se arriva POST, la inoltriamo a doGet
-     */
+    // POST => reindirizzato a doGet
     @Override
-    protected void doPost(HttpServletRequest request, HttpServletResponse response)
+    protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         doGet(request, response);
     }

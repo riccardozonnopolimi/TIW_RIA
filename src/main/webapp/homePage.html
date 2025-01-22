@@ -101,6 +101,16 @@
                 <!-- 5 celle -->
             </tr>
         </table>
+        
+        <!-- Bottone "Modify Order" per aprire la sezione drag&drop -->
+<button id="modifyOrderBtn" class="modify-order">Modify Order</button>
+
+<!-- Sezione reorder (nascosta di default) -->
+<div id="reorderSection" class="reorder-section" style="display: none;">
+    <h4>Reorder Images in this Album</h4>
+    <ul id="reorderList"></ul>
+    <button id="saveOrderBtn" class="save-order">Save Order</button>
+</div>
 
         <!-- Sezione "not in album" -->
         <div class="not-in-album-section">
@@ -128,6 +138,9 @@
                 <textarea id="modalCommentText" name="testo" rows="2" required></textarea>
                 <button type="submit">Send Comment</button>
             </form>
+            
+        <!-- Nuovo pulsante "Delete Photo" -->
+        <button id="deletePhotoBtn" class="delete-photo">Delete Photo</button>
         </div>
     </div>
 

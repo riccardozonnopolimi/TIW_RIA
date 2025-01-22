@@ -8,21 +8,20 @@ import javax.servlet.ServletContext;
 import javax.servlet.ServletException;
 import javax.servlet.annotation.WebServlet;
 import javax.servlet.http.HttpServlet;
+import javax.servlet.http.HttpServletRequest;
 import javax.servlet.http.HttpServletResponse;
 import javax.servlet.http.HttpSession;
-import javax.servlet.http.HttpServletRequest;
 
-import it.polimi.tiw.DAO.CommentoDAO;
-import it.polimi.tiw.DAO.ImmagineDAO;
+import it.polimi.tiw.DAO.AlbumDAO;
 import it.polimi.tiw.beans.User;
 import it.polimi.tiw.util.ConnectionHandler;
 
-@WebServlet("/AddComment")
-public class AddComment extends HttpServlet {
+@WebServlet("/UpdateOrder")
+public class UpdateOrder extends HttpServlet {
     private static final long serialVersionUID = 1L;
     private Connection connection;
 
-    public AddComment() {
+    public UpdateOrder() {
         super();
     }
 
@@ -42,63 +41,74 @@ public class AddComment extends HttpServlet {
     }
 
     /**
-     * Esempio: GET /AddComment?imageId=xxx&albumId=yyy&testo=COMMENTO
+     * Riceve ad es.:
+     *  - albumId = ...
+     *  - order = "101,55,72,80" (lista di id immagine in ordine)
+     *  GET o POST => albumId=?&order=??
      */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check session
+        // Check login
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
+        User user = (User) session.getAttribute("currentUser");
 
-        // Recupera parametri
-        String testo = request.getParameter("testo");
-        String imageIdParam = request.getParameter("imageId");
-        
+        // Parametri
+        String albumIdStr = request.getParameter("albumId");
+        String orderStr = request.getParameter("order"); 
+        // Esempio: "101,55,72,80"
 
-        if (testo == null || imageIdParam == null || testo.isBlank() || imageIdParam.isBlank()) {
+        if (albumIdStr == null || orderStr == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        int imageId;
+        int albumId;
         try {
-            imageId = Integer.parseInt(imageIdParam);
+            albumId = Integer.parseInt(albumIdStr);
         } catch (NumberFormatException e) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
 
-        // Info utente
-        User currentUser = (User) session.getAttribute("currentUser");
-        int userId = currentUser.getId_user();
-        String username = currentUser.getUsername();
-
-        CommentoDAO commentoDAO = new CommentoDAO(connection);
-        ImmagineDAO immagineDAO = new ImmagineDAO(connection);
-
+        // Convertiamo la stringa in un array di int
+        String[] parts = orderStr.split(",");
+        int[] orderArray = new int[parts.length];
         try {
-            // Crea il commento
-            commentoDAO.createCommento(testo, userId, imageId, username);
+            for (int i=0; i<parts.length; i++) {
+                orderArray[i] = Integer.parseInt(parts[i].trim());
+            }
+        } catch (NumberFormatException e) {
+            response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
+            return;
+        }
 
-            // Aggiorna contatore commenti in tabella immagine (se necessario)
-            immagineDAO.updateTotCommentiByImageId(imageId);
+        // Chiama albumDAO.setOrder per aggiornare
+        AlbumDAO albumDAO = new AlbumDAO(connection);
+        try {
+            // Esempio: controlla se albumId appartiene a user
+            boolean isOwner = albumDAO.checkAlbumOwner(albumId, user.getId_user());
+            if (!isOwner) {
+                // non sei il proprietario => 403
+                response.setStatus(HttpServletResponse.SC_FORBIDDEN);
+                return;
+            }
+
+            // Aggiorna l'ordine
+            albumDAO.setOrder(albumId, orderArray);
 
             response.setStatus(HttpServletResponse.SC_OK);
-
         } catch (SQLException e) {
             e.printStackTrace();
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
         }
     }
 
-    /**
-     * Se arriva POST, la inoltriamo a doGet
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

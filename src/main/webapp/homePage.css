@@ -235,3 +235,47 @@ button:hover {
 #modalComments .comment-item {
     margin-bottom: 8px;
 }
+/* Bottone "Delete Photo" */
+.delete-photo {
+    background-color: #dc3545; /* rosso */
+    color: #fff;
+    margin-top: 10px;
+    display: inline-block;
+}
+.delete-photo:hover {
+    background-color: #b52a36;
+}
+
+/* Bottone "Modify Order" */
+.modify-order {
+    margin-top: 10px;
+}
+
+/* Sezione reorder */
+.reorder-section {
+    margin-top: 20px;
+    background-color: #fff;
+    border: 1px solid #ccc;
+    padding: 10px;
+    border-radius: 5px;
+}
+
+/* Lista per drag & drop */
+#reorderList {
+    list-style-type: none;
+    padding-left: 0;
+    margin-bottom: 10px;
+}
+#reorderList li {
+    margin: 5px 0;
+    padding: 8px;
+    border: 1px solid #ddd;
+    cursor: move; /* segnale di drag */
+    background-color: #f9f9f9;
+}
+
+/* Durante il drag, evidenziare la destinazione */
+#reorderList li.drag-over {
+    border: 2px dashed #007bff;
+}
+

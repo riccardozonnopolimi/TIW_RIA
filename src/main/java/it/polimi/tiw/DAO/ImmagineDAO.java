@@ -110,10 +110,15 @@ public class ImmagineDAO {
     
 	public Immagine[] getAllUserPhoto(int id_user) throws SQLException {
  	    String performedAction = " finding all image of a user by id_user ";
- 	    PreparedStatement statement = null;
- 	    ResultSet result = null;
+    	String performedAction2 = " finding all comment of a image by id_image ";
+    	String query2 = "SELECT c.id_comm FROM commento c WHERE c.id_im = ?";
+    	PreparedStatement statement = null;
+    	PreparedStatement statement2 = null;
+    	ResultSet result = null;
+    	ResultSet result2 = null;
  	    Immagine immagine = null;
  	    Immagine[] allPhotos = new Immagine[5];  // Inizializzo l'array con 5 posizioni
+ 	    CommentoDAO commentoDAO = new CommentoDAO(connection);
 
  	    try {
  	        String query1 = "SELECT * FROM immagine WHERE proprietario = ? ORDER BY immagine.data_c DESC";
@@ -136,8 +141,31 @@ public class ImmagineDAO {
  	            String descrizione= result.getString("descrizione");
  	            String percorso = result.getString("percorso");
  	            int id_immagine = result.getInt("id_image");
- 	            int totale_commenti = result.getInt("totale_commenti");
- 	            Commento[] commenti = new Commento[totale_commenti];
+ 	            int totaleCommenti = result.getInt("totale_commenti");
+ 	            Commento[] commenti = null;
+ 	            
+	            // Inizializza l'array di ID delle immagini
+	            if (totaleCommenti > 0) {
+	                int[] id_comm = new int[totaleCommenti];
+	                 commenti = new Commento[totaleCommenti];
+
+	                
+	                	statement2 = connection.prepareStatement(query2);
+	                    statement2.setInt(1, id_immagine);
+	                    result2 = statement2.executeQuery();
+	                        int index = 0;
+	                        while (result2.next() && index < totaleCommenti) {
+	                            id_comm[index] = result2.getInt("id_comm");
+	                            index++;
+	                    }
+	                
+	                // Carica le immagini dal database
+	                
+	                for (int j = 0; j < totaleCommenti; j++) {
+	                	commenti[j] = commentoDAO.getCommentoById(id_comm[j]);
+	                }
+	                
+	            }
  	            
  	            //TODO for per riempire arrai commenti con i commenti
  	            
@@ -155,9 +183,17 @@ public class ImmagineDAO {
  	    } catch (SQLException e) {
  	        throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
  	    } finally {
+ 	    	try {
  	        closeResources(result, statement);
+ 	    	}catch (Exception e) {
+                throw new SQLException("Error closing the resources when" + performedAction + "[ " + e.getMessage() + " ]");
  	    }
-
+ 	   	try {
+ 	        closeResources(result2, statement2);
+ 	    	}catch (Exception e) {
+                throw new SQLException("Error closing the second resources when" + performedAction2 + "[ " + e.getMessage() + " ]");
+ 	    }
+ 	    }
  	    return allPhotos;
  	}
 

@@ -31,6 +31,14 @@
   <filter-mapping>
   	<filter-name>CheckLoggedUser</filter-name>
     <url-pattern>/homePage.html</url-pattern>
+    <url-pattern>/GetImages</url-pattern>
+    <url-pattern>/GetAlbums</url-pattern>
+    <url-pattern>/UploadPhoto</url-pattern>
+    <url-pattern>/DownloadPhoto</url-pattern>
+    <url-pattern>/CreateAlbum</url-pattern>
+    <url-pattern>/AddImageToAlbum</url-pattern>
+    <url-pattern>/AddComment</url-pattern>
+    <url-pattern>/DeletePhoto</url-pattern>
   </filter-mapping>
   <filter-mapping>
   	<filter-name>CheckNotLoggedUser</filter-name>

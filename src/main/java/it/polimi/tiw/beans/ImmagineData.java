@@ -10,8 +10,6 @@ public class ImmagineData {
     private String descrizione;
     private String percorso;
     private int id_user_proprietario;
-
-    // Se l'immagine ha dei commenti, li convertiamo in un array di CommentoData
     private CommentoData[] commenti;
 
     public ImmagineData(Immagine immagine) {
@@ -32,7 +30,6 @@ public class ImmagineData {
         }
     }
 
-    // GETTER
     public Timestamp getData_creazione() {
         return data_creazione;
     }

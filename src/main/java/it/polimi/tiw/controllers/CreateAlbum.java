@@ -39,14 +39,12 @@ public class CreateAlbum extends HttpServlet {
         }
     }
 
-    // GET => reindirizziamo a doPost
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
         doPost(request, response);
     }
 
-    // POST => crea un album
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

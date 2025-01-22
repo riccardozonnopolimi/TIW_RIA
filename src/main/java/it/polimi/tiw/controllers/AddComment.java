@@ -41,30 +41,24 @@ public class AddComment extends HttpServlet {
         }
     }
 
-    /**
-     * Esempio: GET /AddComment?imageId=xxx&albumId=yyy&testo=COMMENTO
-     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // Check session
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
-
-        // Recupera parametri
+        
         String testo = request.getParameter("testo");
         String imageIdParam = request.getParameter("imageId");
-        
-
+       
         if (testo == null || imageIdParam == null || testo.isBlank() || imageIdParam.isBlank()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             return;
         }
-
+        
         int imageId;
         try {
             imageId = Integer.parseInt(imageIdParam);
@@ -73,19 +67,14 @@ public class AddComment extends HttpServlet {
             return;
         }
 
-        // Info utente
         User currentUser = (User) session.getAttribute("currentUser");
         int userId = currentUser.getId_user();
         String username = currentUser.getUsername();
-
         CommentoDAO commentoDAO = new CommentoDAO(connection);
         ImmagineDAO immagineDAO = new ImmagineDAO(connection);
-
         try {
-            // Crea il commento
             commentoDAO.createCommento(testo, userId, imageId, username);
 
-            // Aggiorna contatore commenti in tabella immagine (se necessario)
             immagineDAO.updateTotCommentiByImageId(imageId);
 
             response.setStatus(HttpServletResponse.SC_OK);
@@ -96,9 +85,6 @@ public class AddComment extends HttpServlet {
         }
     }
 
-    /**
-     * Se arriva POST, la inoltriamo a doGet
-     */
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

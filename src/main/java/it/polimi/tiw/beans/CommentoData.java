@@ -19,7 +19,6 @@ public class CommentoData {
         this.username = commento.getUsername();
     }
 
-    // GETTER
     public int getId_commento() {
         return id_commento;
     }

@@ -46,30 +46,18 @@ public class Register extends HttpServlet {
         doPost(request, response);
     }
 
-    /**
-     * doPost:
-     * - Controlla i parametri.
-     * - Se errori => setStatus(400) e body di testo con il messaggio di errore.
-     * - Se errore DB => setStatus(500) e body con messaggio d'errore.
-     * - Se tutto OK => setStatus(200).
-     * Nessun forward/redirect: la logica è gestita dal front-end in AJAX.
-     */
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
 
-        // Indichiamo che rispondiamo in testo semplice (plain text).
-        // Se vuoi, potresti lasciare text/html, ma di solito text/plain è più lineare.
         response.setContentType("text/plain");
         response.setCharacterEncoding("UTF-8");
-
-        // Recupera i parametri
         String email = request.getParameter("email");
         String username = request.getParameter("username");
         String password = request.getParameter("password");
         String repeat_pwd = request.getParameter("repeat_pwd");
 
-        // 1. Check di base
         if (email == null || username == null || password == null || repeat_pwd == null 
                 || email.isBlank() || username.isBlank() || password.isBlank() || repeat_pwd.isBlank()) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -79,7 +67,6 @@ public class Register extends HttpServlet {
             return;
         }
 
-        // 2. Check formale email
         String emailRegEx = "^(?:[a-z0-9!#$%&'*+/=?^_`{|}~-]+(?:\\."
                 + "[a-z0-9!#$%&'*+/=?^_`{|}~-]+)*|\"(?:[\\x01-\\x08\\x0b\\x0c"
                 + "\\x0e-\\x1f\\x21\\x23-\\x5b\\x5d-\\x7f]|\\\\[\\x01-\\x09"
@@ -99,7 +86,6 @@ public class Register extends HttpServlet {
             return;
         }
 
-        // 3. Check lunghezza username
         if (username.length() <= 0 || username.length() > 40) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             try (PrintWriter out = response.getWriter()) {
@@ -108,7 +94,6 @@ public class Register extends HttpServlet {
             return;
         }
 
-        // 4. Check password e ripetizione
         if (password.length() <= 0 || password.length() > 40) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
             try (PrintWriter out = response.getWriter()) {
@@ -125,10 +110,8 @@ public class Register extends HttpServlet {
             return;
         }
 
-        // 5. Check unicità su DB
         UserDAO userDAO = new UserDAO(connection);
         try {
-            // Verifichiamo se email esiste già
             User userByEmail = userDAO.findUserByEmail(email);
             if (userByEmail != null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -138,7 +121,6 @@ public class Register extends HttpServlet {
                 return;
             }
 
-            // Verifichiamo se username esiste già
             User userByUsername = userDAO.findUserByUsername(username);
             if (userByUsername != null) {
                 response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -148,10 +130,9 @@ public class Register extends HttpServlet {
                 return;
             }
 
-            // 6. Creiamo l'utente
+
             userDAO.createUser(username, email, password);
 
-            // Verifichiamo che sia stato effettivamente creato
             User newUser = userDAO.findUserByEmail(email);
             if (newUser == null) {
                 response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
@@ -160,20 +141,13 @@ public class Register extends HttpServlet {
                 }
                 return;
             }
-
-            // SE TUTTO OK => 200
             response.setStatus(HttpServletResponse.SC_OK);
 
-            // A tuo piacere, potresti anche scrivere un messaggio nel body:
-            //  es: "Registration successful. You can now log in."
-            //  Ma se preferisci un body vuoto, puoi omettere.
-            //  Lato front-end, se status=200, mostrerai in pagina il messaggio di successo.
             try (PrintWriter out = response.getWriter()) {
-                out.println("OK"); // oppure "Registration successful"
+                out.println("OK"); 
             }
 
         } catch (SQLException e) {
-            // Errore a livello DB
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             try (PrintWriter out = response.getWriter()) {
                 out.println("DB Error: " + e.getMessage());

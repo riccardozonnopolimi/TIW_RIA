@@ -48,30 +48,23 @@ public class GetAlbums extends HttpServlet {
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-        // Controllo sessione
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // Recupera userId
         int userId = (int) session.getAttribute("currentUserId");
-
-        // Esegui query per recuperare tutti gli album di quell'utente
         AlbumDAO albumDAO = new AlbumDAO(connection);
         Album[] userAlbums = null;
 
         try {
-            // Metti un tuo metodo, ad es. "getAllUserAlbum2" o simile
             userAlbums = albumDAO.getAllUserAlbum2(userId);
         } catch (SQLException e) {
-            // Errore DB => 500
             response.setStatus(HttpServletResponse.SC_INTERNAL_SERVER_ERROR);
             return;
         }
 
-        // Converti in array di AlbumData (per serializzare in JSON)
         AlbumData[] userAlbumsData;
         if (userAlbums == null) {
             userAlbumsData = new AlbumData[0];
@@ -80,8 +73,6 @@ public class GetAlbums extends HttpServlet {
                                    .map(AlbumData::new)
                                    .toArray(AlbumData[]::new);
         }
-
-        // Serializza in JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
 
@@ -91,7 +82,6 @@ public class GetAlbums extends HttpServlet {
         out.flush();
     }
 
-    // Se la tua UI fa una GET, la doPost potresti mappare a doGet
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {

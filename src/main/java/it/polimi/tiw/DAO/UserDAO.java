@@ -64,7 +64,6 @@ public class UserDAO {
 			statement.setString(2, email);
 			statement.setString(3, password);
 			statement.executeUpdate();
-			// todo creare album zero connesso all'utente
 
 		} catch (SQLException e) {
 			throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
@@ -117,7 +116,6 @@ public class UserDAO {
 		return user;
 	}
 
-	// trovare utente tramite username
 	public User findUserByUsername(String username) throws SQLException {
 		String performedAction = " finding a user by username ";
 		PreparedStatement statement = null;

@@ -45,7 +45,6 @@ public class GetImages extends HttpServlet {
         }
     }
 
-    // GET => restituiamo l'elenco delle immagini dell'utente
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
@@ -67,7 +66,6 @@ public class GetImages extends HttpServlet {
             return;
         }
 
-        // Convertiamo in array di ImmagineData
         ImmagineData[] imagesData;
         if (userImages == null) {
             imagesData = new ImmagineData[0];
@@ -76,11 +74,8 @@ public class GetImages extends HttpServlet {
                                .map(ImmagineData::new)
                                .toArray(ImmagineData[]::new);
         }
-
-        // Serializziamo in JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
         Gson gson = new Gson();
         String json = gson.toJson(imagesData);
         PrintWriter out = response.getWriter();
@@ -88,7 +83,6 @@ public class GetImages extends HttpServlet {
         out.flush();
     }
 
-    // Se preferisci POST => reindirizziamo a doGet
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {

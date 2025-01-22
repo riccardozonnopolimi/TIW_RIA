@@ -42,22 +42,16 @@ public class DownloadPhoto extends HttpServlet {
         }
     }
 
-    /**
-     * Gestisce GET: "DownloadPhoto?imageId=xxx"
-     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // 1. Verifica sessione e utente loggato
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
-            // Se non loggato => 401
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // 2. Recupera il parametro "imageId"
         String imageIdParam = request.getParameter("imageId");
         if (imageIdParam == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -72,7 +66,6 @@ public class DownloadPhoto extends HttpServlet {
             return;
         }
 
-        // 3. Recupera il percorso dal DB (tramite ImmagineDAO)
         String imagePath;
         try {
             ImmagineDAO immagineDAO = new ImmagineDAO(connection);
@@ -84,7 +77,6 @@ public class DownloadPhoto extends HttpServlet {
         }
 
         if (imagePath == null) {
-            // Non esiste quell'immagine
             response.setStatus(HttpServletResponse.SC_NOT_FOUND);
             return;
         }
@@ -95,17 +87,14 @@ public class DownloadPhoto extends HttpServlet {
             return;
         }
 
-        // 4. Determiniamo il mimeType
         String mimeType = getServletContext().getMimeType(file.getName());
         if (mimeType == null) {
             // fallback
             mimeType = "application/octet-stream";
         }
 
-        // 5. Scriviamo l'immagine nel response
         response.setContentType(mimeType);
         response.setContentLengthLong(file.length());
-        // "inline" => visualizza l'immagine nel browser
         response.setHeader("Content-Disposition", "inline; filename=\"" + file.getName() + "\"");
 
         try (OutputStream out = response.getOutputStream()) {

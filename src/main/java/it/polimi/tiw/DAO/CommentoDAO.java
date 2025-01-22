@@ -76,7 +76,6 @@ public class CommentoDAO {
 	
 	
 	public void deleteAllCommentsByImageId(int id_immagine) throws SQLException {
-		// TODO Auto-generated method stub
 		String performedAction = "deleting all comment of an image ";
 	    String query = "DELETE FROM commento WHERE id_im = ?";
 	    PreparedStatement statement = null;

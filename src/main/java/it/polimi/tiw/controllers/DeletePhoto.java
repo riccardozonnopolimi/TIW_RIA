@@ -42,19 +42,16 @@ public class DeletePhoto extends HttpServlet {
         }
     }
 
-    // GET => /DeletePhoto?albumId=xxx&imageId=yyy
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
 
-        // Check login
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // Recupera parametri
         
         String imageIdStr = request.getParameter("imageId");
         int imageId;
@@ -70,7 +67,6 @@ public class DeletePhoto extends HttpServlet {
         AlbumDAO albumDAO = new AlbumDAO(connection);
 
         try {
-            // 1. Recupera il percorso fisico dal DB
             String filePath = immagineDAO.getImagePathById(imageId);
             if (filePath == null) {
                 response.setStatus(HttpServletResponse.SC_NOT_FOUND);
@@ -78,22 +74,15 @@ public class DeletePhoto extends HttpServlet {
             }
             
             albumDAO.refactorPosition(imageId);
-            // 2. Elimina tutti i commenti su quell’immagine
+            
             commentoDAO.deleteAllCommentsByImageId(imageId);
 
-            // 3. Decrementa il conteggio dell'album, se necessario
             albumDAO.decrementAlbumImageCount(imageId);
-            
-            
 
-            // 4. Rimuove i link image_album
             immagineDAO.delinkImageToAlbum(imageId);
             
-            
-            // 5. Elimina l’immagine dal DB
             immagineDAO.deleteImageById(imageId);
 
-            // 6. Elimina fisicamente il file
             File file = new File(filePath);
             if (file.exists()) {
                 if (!file.delete()) {
@@ -109,7 +98,6 @@ public class DeletePhoto extends HttpServlet {
         }
     }
 
-    // POST => reindirizzato a doGet
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {

@@ -41,25 +41,20 @@ public class AddImageToAlbum extends HttpServlet {
         }
     }
 
-    /**
-     * Gestisce GET: /AddImageToAlbum?albumId=xxx&imageId=yyy
-     */
+
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check session
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
             return;
         }
 
-        // Recupera userId
         User currentUser = (User) session.getAttribute("currentUser");
         int userId = currentUser.getId_user();
 
-        // Legge parametri albumId, imageId
         String albumIdParam = request.getParameter("albumId");
         String imageIdParam = request.getParameter("imageId");
         if (albumIdParam == null || imageIdParam == null) {
@@ -80,13 +75,10 @@ public class AddImageToAlbum extends HttpServlet {
         AlbumDAO albumDAO = new AlbumDAO(connection);
 
         try {
-            // Aggiunge il link (riga in tabella di join, ecc.)
             immagineDAO.linkImageToAlbum(imageId, albumId, userId);
 
-            // Aggiorna contatore di immagini in quell’album
             albumDAO.updateAlbumImageCount(connection, albumId);
 
-            // OK => status 200
             response.setStatus(HttpServletResponse.SC_OK);
 
         } catch (SQLException e) {

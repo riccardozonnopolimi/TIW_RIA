@@ -20,14 +20,12 @@ public class CheckLoggedUser implements Filter {
 	 * Default constructor.
 	 */
 	public CheckLoggedUser() {
-		// TODO Auto-generated constructor stub
 	}
 
 	/**
 	 * @see Filter#destroy()
 	 */
 	public void destroy() {
-		// TODO Auto-generated method stub
 	}
 
 	/**
@@ -35,21 +33,17 @@ public class CheckLoggedUser implements Filter {
 	 */
 	public void doFilter(ServletRequest request, ServletResponse response, FilterChain chain) throws IOException, ServletException {
 
-		HttpServletRequest  req = (HttpServletRequest) request;
+		HttpServletRequest req = (HttpServletRequest) request;
 		HttpServletResponse res = (HttpServletResponse) response;
-		HttpSession           s = req.getSession(false);
+		HttpSession s = req.getSession(false);
 
 		if (s != null) {
-			
 			Object user = s.getAttribute("currentUser");
-			
 			if (user != null) {
-				
 				chain.doFilter(request, response);
 				return;
 			}
 		}
-
 		res.sendRedirect("login.html");
 	}
 }

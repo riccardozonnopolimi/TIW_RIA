@@ -49,17 +49,13 @@ public class UploadPhoto extends HttpServlet {
         }
     }
 
-    // GET => reindirizziamo a doPost
     protected void doGet(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
         doPost(request, response);
     }
 
-    // POST => Upload dell'immagine
     protected void doPost(HttpServletRequest request, HttpServletResponse response) 
             throws ServletException, IOException {
-
-        // Check sessione
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -69,8 +65,6 @@ public class UploadPhoto extends HttpServlet {
         int userId = (int) session.getAttribute("currentUserId");
         String title = request.getParameter("title");
         String description = request.getParameter("description");
-
-        // Path locale in cui salvare fisicamente i file (modifica secondo necessità)
         String uploadPath = "/Users/riccardozonno/res_ria";
         File uploadDir = new File(uploadPath);
         if (!uploadDir.exists()) {
@@ -87,21 +81,14 @@ public class UploadPhoto extends HttpServlet {
                                            .getFileName().toString();
             String fileName = rand + originalFilename;
             String filePath = uploadDir + File.separator + fileName;
-
-            // Salva fisicamente il file
             filePart.write(filePath);
-
             File uploadedFile = new File(filePath);
             if (uploadedFile.exists()) {
                 System.out.println("File scritto correttamente: " + filePath);
             } else {
                 System.err.println("Errore: il file non è stato scritto.");
             }
-
-            // Path da salvare nel DB (un path "logico" o relativo)
             String dbPath = "/Users/riccardozonno/res_ria" + "/" + fileName;
-
-            // Inserisci immagine nel database
             ImmagineDAO immagineDAO = new ImmagineDAO(connection);
             immagineDAO.insertImageData(title, description, dbPath, userId);
 

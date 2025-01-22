@@ -40,17 +40,10 @@ public class UpdateOrder extends HttpServlet {
         }
     }
 
-    /**
-     * Riceve ad es.:
-     *  - albumId = ...
-     *  - order = "101,55,72,80" (lista di id immagine in ordine)
-     *  GET o POST => albumId=?&order=??
-     */
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
 
-        // Check login
         HttpSession session = request.getSession(false);
         if (session == null || session.getAttribute("currentUser") == null) {
             response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
@@ -58,10 +51,8 @@ public class UpdateOrder extends HttpServlet {
         }
         User user = (User) session.getAttribute("currentUser");
 
-        // Parametri
         String albumIdStr = request.getParameter("albumId");
         String orderStr = request.getParameter("order"); 
-        // Esempio: "101,55,72,80"
 
         if (albumIdStr == null || orderStr == null) {
             response.setStatus(HttpServletResponse.SC_BAD_REQUEST);
@@ -76,7 +67,6 @@ public class UpdateOrder extends HttpServlet {
             return;
         }
 
-        // Convertiamo la stringa in un array di int
         String[] parts = orderStr.split(",");
         int[] orderArray = new int[parts.length];
         try {
@@ -88,18 +78,14 @@ public class UpdateOrder extends HttpServlet {
             return;
         }
 
-        // Chiama albumDAO.setOrder per aggiornare
         AlbumDAO albumDAO = new AlbumDAO(connection);
         try {
-            // Esempio: controlla se albumId appartiene a user
             boolean isOwner = albumDAO.checkAlbumOwner(albumId, user.getId_user());
             if (!isOwner) {
-                // non sei il proprietario => 403
                 response.setStatus(HttpServletResponse.SC_FORBIDDEN);
                 return;
             }
 
-            // Aggiorna l'ordine
             albumDAO.setOrder(albumId, orderArray);
 
             response.setStatus(HttpServletResponse.SC_OK);

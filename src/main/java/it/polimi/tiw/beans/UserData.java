@@ -3,20 +3,13 @@ package it.polimi.tiw.beans;
 public class UserData {
     private boolean success;
     private String message;
-
     private int userId;
     private String username;
-
-    // Array di oggetti Data (definiti separatamente)
     private AlbumData[] myAlbums;
     private AlbumData[] otherAlbums;
     private ImmagineData[] myImages;
 
-    /**
-     * Costruttore principale basato su un oggetto User (login riuscito).
-     * Di default, impostiamo success = true e un messaggio standard 
-     * (a meno che tu non voglia sovrascriverli a mano dopo).
-     */
+
     public UserData(User user) {
         if (user != null) {
             this.success = true;
@@ -24,21 +17,18 @@ public class UserData {
             this.userId = user.getId_user();
             this.username = user.getUsername();
         } else {
-            // Se user fosse null, consideriamo la login fallita
             this.success = false;
             this.message = "User is null!";
         }
     }
 
-    /**
-     * Costruttore alternativo (per login fallito o altre situazioni).
-     */
+ 
     public UserData(boolean success, String message) {
         this.success = success;
         this.message = message;
     }
 
-    // GETTER e SETTER
+
     public boolean isSuccess() {
         return success;
     }

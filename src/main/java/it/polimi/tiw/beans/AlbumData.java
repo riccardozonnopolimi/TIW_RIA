@@ -11,9 +11,6 @@ public class AlbumData {
     private int totale_immagini;
     private int[] id_immagini;
     private String usernameCreatore;
-
-    // Se vuoi includere direttamente le immagini di questo album,
-    // puoi farlo con un array di ImmagineData
     private ImmagineData[] immagini;
 
     public AlbumData(Album album) {
@@ -25,7 +22,6 @@ public class AlbumData {
         this.id_immagini = album.getId_immagini();
         this.usernameCreatore = album.getUsernameCreatore();
 
-        // Se l'album contiene già un array di Immagine, convertiamolo
         if (album.getImmagini() != null) {
             this.immagini = Arrays.stream(album.getImmagini())
                                   .map(ImmagineData::new)
@@ -35,7 +31,6 @@ public class AlbumData {
         }
     }
 
-    // GETTER
     public int getId_album() {
         return id_album;
     }

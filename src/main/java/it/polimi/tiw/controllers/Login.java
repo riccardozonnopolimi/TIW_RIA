@@ -61,26 +61,18 @@ public class Login extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response)
             throws ServletException, IOException {
-
-        // Rispondiamo in JSON
         response.setContentType("application/json");
         response.setCharacterEncoding("UTF-8");
-
-        // Recupero parametri
         String email = request.getParameter("email");
         String password = request.getParameter("password");
-
-        // Crea un oggetto UserData (per la risposta)
         UserData userData;
 
-        // Check parametri
         if (email == null || password == null || email.isBlank() || password.isBlank()) {
             userData = new UserData(false, "Email or password missing");
             writeJsonResponse(response, userData);
             return;
         }
 
-        // Verifica credenziali con UserDAO
         UserDAO userDAO = new UserDAO(connection);
         User user = null;
         try {
@@ -91,25 +83,19 @@ public class Login extends HttpServlet {
             return;
         }
 
-        // Se l'utente non esiste => login fallita
         if (user == null) {
             userData = new UserData(false, "Email or password incorrect!");
             writeJsonResponse(response, userData);
             return;
         }
 
-        // LOGIN OK => impostiamo la sessione
         HttpSession session = request.getSession();
         session.setAttribute("currentUser", user);
         session.setAttribute("currentUserId", user.getId_user());
         session.setAttribute("currentUserUsername", user.getUsername());
 
-        // Creiamo un UserData con success = true e dati utente
         userData = new UserData(user);
-        // Se vuoi cambiare "message" di default
-        // userData.setMessage("Welcome user " + user.getUsername() + "!");
 
-        // Carichiamo i dati extra
         AlbumDAO albumDAO = new AlbumDAO(connection);
         ImmagineDAO immagineDAO = new ImmagineDAO(connection);
 
@@ -142,7 +128,6 @@ public class Login extends HttpServlet {
             return;
         }
 
-        // Convertiamo in data
         AlbumData[] userAlbumsData = (userAlbums != null)
             ? Arrays.stream(userAlbums).map(AlbumData::new).toArray(AlbumData[]::new)
             : new AlbumData[0];
@@ -155,12 +140,10 @@ public class Login extends HttpServlet {
             ? Arrays.stream(userImmagini).map(ImmagineData::new).toArray(ImmagineData[]::new)
             : new ImmagineData[0];
 
-        // Assegnali a userData
         userData.setMyAlbums(userAlbumsData);
         userData.setOtherAlbums(otherAlbumsData);
         userData.setMyImages(userImagesData);
 
-        // Invio JSON finale
         writeJsonResponse(response, userData);
     }
 

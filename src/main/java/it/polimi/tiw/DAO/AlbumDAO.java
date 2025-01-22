@@ -24,12 +24,10 @@ public class AlbumDAO {
 	    PreparedStatement statement = null;
 	    ResultSet result = null;
 	    Album album = null;
-
 	    String queryAlbum = "SELECT * FROM album WHERE id_album = ?";
 	    String queryImages = "SELECT id_ima FROM image_album WHERE id_alb = ?";
 
 	    try {
-	        // Recupera i dati dell'album
 	        statement = connection.prepareStatement(queryAlbum);
 	        statement.setInt(1, id_album);
 	        result = statement.executeQuery();
@@ -45,7 +43,6 @@ public class AlbumDAO {
 
 	            int totaleImmagini = album.getTotale_immagini();
 
-	            // Inizializza l'array di ID delle immagini
 	            if (totaleImmagini > 0) {
 	            	boolean flag = false;
 	                int[] id_immagini = new int[totaleImmagini];
@@ -65,7 +62,6 @@ public class AlbumDAO {
 	                    }
 	                }
 
-	                // Carica le immagini dal database
 	                ImmagineDAO imageDao = new ImmagineDAO(connection);
 	                for (int i = 0; i < totaleImmagini; i++) {
 	                    immagini[i] = imageDao.getImageById(id_immagini[i]);
@@ -80,7 +76,6 @@ public class AlbumDAO {
 	    } catch (SQLException e) {
 	        throw new SQLException("Error accessing the DB when " + performedAction + "[ " + e.getMessage() + " ]");
 	    } finally {
-	        // Chiude il ResultSet
 	        if (result != null) {
 	            try {
 	                result.close();
@@ -88,8 +83,6 @@ public class AlbumDAO {
 	                throw new SQLException("Error closing the result set when " + performedAction + "[ " + e.getMessage() + " ]");
 	            }
 	        }
-
-	        // Chiude il PreparedStatement
 	        if (statement != null) {
 	            try {
 	                statement.close();
@@ -201,21 +194,19 @@ public class AlbumDAO {
  	    PreparedStatement statement = null;
  	    ResultSet result = null;
  	    Album album = null;
- 	    Album[] allAlbums = new Album[5];  // Array iniziale di 5 posizioni
+ 	    Album[] allAlbums = new Album[5];  
  	    PreparedStatement statement2 = null;
  	    ResultSet result2 = null;
 
  	    try {
- 	        //  Query per selezionare tutti gli album tranne quelli dell'utente specificato
  	        String query1 = "SELECT a.*, u.username FROM album a JOIN user u ON a.creatore = u.id_user WHERE a.creatore <> ? ORDER BY a.data_creazione DESC";
  	        statement = connection.prepareStatement(query1);
  	        statement.setInt(1, id_user);
  	        result = statement.executeQuery();
 
- 	        int i = 0;  // Indice per l'array
+ 	        int i = 0;  
 
  	        while (result.next()) {
- 	            //  Raddoppio la dimensione dell'array se pieno
  	            if (i == allAlbums.length) {
  	                allAlbums = resizeArray(allAlbums);
  	            }
@@ -228,9 +219,8 @@ public class AlbumDAO {
  	            String username_proprietario = result.getString("username"); 
 
  	            album = new Album(id_album, titolo, id_user_proprietario, totale_immagini, data);
- 	           album.setUsernameCreatore(username_proprietario);
+ 	            album.setUsernameCreatore(username_proprietario);
 
- 	            // Recupero le immagini associate all'album
  	            if (album.getTotale_immagini() > 0) {
  	                String query2 = "SELECT * FROM image_album WHERE id_alb = ?";
  	                statement2 = connection.prepareStatement(query2);
@@ -257,12 +247,9 @@ public class AlbumDAO {
  	            i++;
  	        }
 
- 	        //  Se non sono stati trovati album, ritorna null
  	        if (i == 0) {
  	            return null;
  	        }
-
- 	        //  Ridimensiono l'array alla dimensione reale
  	        allAlbums = trimArray(allAlbums, i);
 
  	    } catch (SQLException e) {
@@ -280,7 +267,7 @@ public class AlbumDAO {
  	    PreparedStatement statement = null;
  	    ResultSet result = null;
  	    Album album = null;
- 	    Album[] allAlbum = null;  // Inizializzo l'array con 5 posizioni
+ 	    Album[] allAlbum = null;  
  	    PreparedStatement statement2 = null;
  	    ResultSet result2 = null;
  	    boolean alb = false;
@@ -291,14 +278,14 @@ public class AlbumDAO {
  	        statement.setInt(1, id_user);
  	        result = statement.executeQuery();
 
- 	        int i = 0;  // Indice per scorrere l'array
+ 	        int i = 0;  
 
  	        while (result.next()) {
  	        	if(i==0) {
  	        		alb = true;
  	        		allAlbum = new Album[5];
  	        	}
- 	            // Se l'array è pieno, lo raddoppio
+ 	            
  	            if (i == allAlbum.length) {
  	                allAlbum = resizeArray(allAlbum);
  	            }
@@ -353,7 +340,6 @@ public class AlbumDAO {
  	            i++;
  	        }
 
- 	        // Ridimensiono l'array alla dimensione esatta
  	        if(alb) {
  	        allAlbum = trimArray(allAlbum, i);
  	        }
@@ -368,7 +354,6 @@ public class AlbumDAO {
  	    return allAlbum;
  	}
  	
- // Metodo per raddoppiare la dimensione dell'array
  	private Album[] resizeArray(Album[] original) {
  	    int newSize = original.length * 2;
  	    Album[] newArray = new Album[newSize];
@@ -376,14 +361,12 @@ public class AlbumDAO {
  	    return newArray;
  	}
 
- 	// Metodo per tagliare l'array alla dimensione esatta
  	private Album[] trimArray(Album[] original, int size) {
  	    Album[] trimmedArray = new Album[size];
  	    System.arraycopy(original, 0, trimmedArray, 0, size);
  	    return trimmedArray;
  	}
 
- // Metodo per chiudere ResultSet e PreparedStatement
  	private void closeResources(ResultSet resultSet, PreparedStatement statement) throws SQLException {
  	    if (resultSet != null) {
  	        try {
@@ -418,13 +401,12 @@ public class AlbumDAO {
  	
 	private static Immagine[] orderImage(Immagine[] immagini, boolean personalizzato, int[] posizioni) {
         if (immagini == null || immagini.length == 0) {
-            return null;  // Se l'array è nullo o vuoto, esce senza fare nulla
+            return null; 
         }
         if(!personalizzato) {
         Arrays.sort(immagini, new Comparator<Immagine>() {
             @Override
             public int compare(Immagine img1, Immagine img2) {
-                // Ordinamento per data_creazione in ordine decrescente
                 return img2.getData_creazione().compareTo(img1.getData_creazione());
             }
         });
@@ -439,9 +421,7 @@ public class AlbumDAO {
         return immagini;
     }
 	
-	//Dato albumId e un array di int ([101, 55, 72, 80]), 
-	//il DAO aggiorna il campo posizione nella tabella, 
-	//in modo che la prima immagine abbia posizione=0, la seconda=1, e così via.
+
 	public void setOrder(int albumId, int[] orderArray) throws SQLException {
 		String performedAction = "updating order of images in album";
 	    String query = "UPDATE image_album SET posizione = ? WHERE id_alb = ? AND id_ima = ?";
@@ -460,8 +440,6 @@ public class AlbumDAO {
 	        } finally {
 	     		statement.close();
             }
-	    
-		
 	}
 
 	public boolean checkAlbumOwner(int albumId, int id_user) throws SQLException {
@@ -524,12 +502,11 @@ public class AlbumDAO {
 	    int[] posizione = new int[1];
 	    int[] id_alb = new int[1];
 	    int i = 0;
-	    System.out.println("----sono entrato nel refactor-----");
 	    try {
 	    	statement = connection.prepareStatement(query);
 	        statement.setInt(1, imageId);
 	        result = statement.executeQuery();
-	        System.out.println("----fatta prima query-----");
+	        
 	        while(result.next()) {
 	        	if (i == posizione.length) {
  	                posizione = resizeArrayInt(posizione);
@@ -544,19 +521,13 @@ public class AlbumDAO {
 	        
 	 	       posizione = trimArrayInt(posizione, i);
 	 	       id_alb = trimArrayInt(id_alb, i);
-	 	      System.out.println("----sto per fare seconda-----");
+	 	      
 	 	      try {
-	 	    	 System.out.println("----vorrei fare seconda-----" + id_alb.length);
 	 	    	 for(int j = 0; j < id_alb.length; j++) {  
-	 	    		
-		 		       System.out.println(id_alb[j]);
-		 		      System.out.println(posizione[j]);
+
 	 		    	statement2 = connection.prepareStatement(query2);
-	 		    	System.out.println(statement2);
 	 		        statement2.setInt(1, id_alb[j]);
-	 		        
 	 		        statement2.setInt(2, posizione[j]);
-	 		       System.out.println(statement2);
 	 		        statement2.executeUpdate();
 	 		        
 	 	    	 }
@@ -572,7 +543,6 @@ public class AlbumDAO {
             }
 		
 	}
-	 // Metodo per raddoppiare la dimensione dell'array
  	private int[] resizeArrayInt(int[] original) {
  	    int newSize = original.length * 2;
  	    int[] newArray = new int[newSize];
@@ -580,7 +550,6 @@ public class AlbumDAO {
  	    return newArray;
  	}
 
- 	// Metodo per tagliare l'array alla dimensione esatta
  	private int[] trimArrayInt(int[] original, int size) {
  	    int[] trimmedArray = new int[size];
  	    System.arraycopy(original, 0, trimmedArray, 0, size);

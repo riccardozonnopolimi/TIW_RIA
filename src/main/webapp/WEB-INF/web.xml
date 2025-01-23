@@ -33,6 +33,7 @@
     <url-pattern>/homePage.html</url-pattern>
     <url-pattern>/GetImages</url-pattern>
     <url-pattern>/GetAlbums</url-pattern>
+    <url-pattern>/GetOtherAlbums</url-pattern>
     <url-pattern>/UploadPhoto</url-pattern>
     <url-pattern>/DownloadPhoto</url-pattern>
     <url-pattern>/CreateAlbum</url-pattern>

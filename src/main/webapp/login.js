@@ -31,6 +31,7 @@ document.addEventListener("DOMContentLoaded", function () {
                     let jsonResponse = JSON.parse(req.responseText);
 
                     if (jsonResponse.success === true) {
+						loginForm.reset();
                         loginResult.innerText = "Login successful. Welcome " 
                             + jsonResponse.username + "!";
                         sessionStorage.setItem("userId", jsonResponse.userId);
@@ -87,6 +88,7 @@ document.addEventListener("DOMContentLoaded", function () {
         makeFormCall("POST", "Register", registerForm, function (req) {
             if (req.readyState === XMLHttpRequest.DONE) {
                 if (req.status === 200) {
+					registerForm.reset();
                     registerResult.innerText = "Registration successful. You can now log in.";
                 } else {
                     let errorMessage = req.responseText 

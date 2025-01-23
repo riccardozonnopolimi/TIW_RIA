@@ -513,6 +513,24 @@ document.addEventListener("DOMContentLoaded", function () {
                             }
                         }
                     });
+					makeCall("GET", "GetOtherAlbums", null, function (r2) {
+					                        if (r2.readyState === XMLHttpRequest.DONE) {
+					                            if (r2.status === 200) {
+					                                otherAlbums = JSON.parse(r2.responseText);
+					                                sessionStorage.setItem("otherAlbums", JSON.stringify(otherAlbums));
+					                                let foundAlbum = otherAlbums.find(a => a.id_album == currentAlbumId);
+					                                if (foundAlbum) {
+					                                    let updatedImg = foundAlbum.immagini.find(i => i.id_immagine == imageId);
+					                                    if (updatedImg) {
+					                                        populateModalComments(updatedImg.commenti || []);
+					                                        showAlbumImages(foundAlbum);
+					                                    }
+					                                }
+					                            } else {
+					                                alert("Error reloading albums: " + r2.status);
+					                            }
+					                        }
+					                    });
                     modalCommentText.value = "";
                 } else if (req.status === 401) {
                     alert("Unauthorized, please log in again.");
@@ -521,7 +539,9 @@ document.addEventListener("DOMContentLoaded", function () {
                 }
             }
         });
-    });
+	});
+
+		    
 
     // Delete Photo
     deletePhotoBtn.addEventListener("click", function () {

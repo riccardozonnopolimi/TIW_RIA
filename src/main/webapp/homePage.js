@@ -220,7 +220,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const dateCell = document.createElement("td");
             dateCell.textContent = album.data_creazione
-                ? new Date(album.data_creazione).toLocaleString()
+                ? new Date(album.data_creazione).toDateString()
                 : "";
             row.appendChild(dateCell);
 
@@ -264,7 +264,7 @@ document.addEventListener("DOMContentLoaded", function () {
 
             const dateCell = document.createElement("td");
             dateCell.textContent = album.data_creazione 
-                ? new Date(album.data_creazione).toLocaleString()
+                ? new Date(album.data_creazione).toDateString()
                 : "";
             row.appendChild(dateCell);
 

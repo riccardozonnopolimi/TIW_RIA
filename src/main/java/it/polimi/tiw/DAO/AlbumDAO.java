@@ -140,7 +140,7 @@ public class AlbumDAO {
 		long generatedId = 0;
 
 		try {
-
+			connection.setAutoCommit(false);
 			statement = connection.prepareStatement(query);
 			statement.setString(1, titolo);
 			statement.setInt(2, creatore);
@@ -149,7 +149,7 @@ public class AlbumDAO {
             statement2 = connection.prepareStatement(query2);
 			statement2.setString(1, titolo);
 			result = statement2.executeQuery();
-			
+			connection.commit();
 			if (result.next()) {
 			    generatedId = result.getLong("id_album");
 			}
@@ -158,10 +158,13 @@ public class AlbumDAO {
 			return generatedId;
 		}
 		 catch (SQLException e) {
+			 connection.rollback();
 			throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
 		} finally {
 			try {
 				statement.close();
+				connection.setAutoCommit(true);
+
 			} catch (Exception e) {
 				throw new SQLException(
 						"Error closing the statement when" + performedAction + "[ " + e.getMessage() + " ]");
@@ -174,14 +177,19 @@ public class AlbumDAO {
         String query = "UPDATE album SET totale_immagini = totale_immagini + 1 WHERE id_album = ?";
         PreparedStatement statement = null;
         try  {
+        	connection.setAutoCommit(false);
         	statement = connection.prepareStatement(query);
             statement.setInt(1, albumId);
             statement.executeUpdate();
+            connection.commit();
         }catch (SQLException e) {
+        	connection.rollback();
 			throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
         } finally {
         	try {
 			statement.close();
+			connection.setAutoCommit(true);
+
 			} catch (Exception e) {
 				throw new SQLException(
 						"Error closing the statement when" + performedAction + "[ " + e.getMessage() + " ]");
@@ -384,13 +392,18 @@ public class AlbumDAO {
 	    String query = "UPDATE album SET totale_immagini = totale_immagini - 1 WHERE id_album = (SELECT id_alb FROM image_album WHERE id_ima = ?)";
 	    PreparedStatement statement = null;
 	    try {
+	    	connection.setAutoCommit(false);
 	    	statement = connection.prepareStatement(query);
 	        statement.setInt(1, imageId);
 	        statement.executeUpdate();
+	        connection.commit();
 	        }catch (SQLException e) {
+	        	connection.rollback();
 	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
 	        } finally {
 	     		statement.close();
+	     		connection.setAutoCommit(true);
+
             }
 	}
  	
@@ -423,6 +436,7 @@ public class AlbumDAO {
 	    PreparedStatement statement = null;
 	    
 	    try {
+	    	connection.setAutoCommit(false);
 	    	for(int i = 0; i < orderArray.length; i++) {
 	    	statement = connection.prepareStatement(query);
 	        statement.setInt(1, i);
@@ -430,10 +444,14 @@ public class AlbumDAO {
 	        statement.setInt(3, orderArray[i]);
 	        statement.executeUpdate();
 	    	}
+	    	connection.commit();
 	        }catch (SQLException e) {
+	        	connection.rollback();
 	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
 	        } finally {
 	     		statement.close();
+	     		connection.setAutoCommit(true);
+
             }
 	}
 
@@ -498,6 +516,7 @@ public class AlbumDAO {
 	    int[] id_alb = new int[1];
 	    int i = 0;
 	    try {
+	    	connection.setAutoCommit(false);
 	    	statement = connection.prepareStatement(query);
 	        statement.setInt(1, imageId);
 	        result = statement.executeQuery();
@@ -531,10 +550,14 @@ public class AlbumDAO {
 		        } finally {
 		     		statement2.close();
 	            }
+	 	     connection.commit();
 	        }catch (SQLException e) {
+	        	connection.rollback();
 	        	throw new SQLException("Error accessing the DB when" + performedAction + "[ " + e.getMessage() + " ]");
 	        } finally {
 	     		closeResources(result, statement);
+	     		connection.setAutoCommit(true);
+
             }
 		
 	}

@@ -483,7 +483,7 @@ document.addEventListener("DOMContentLoaded", function () {
     modalCommentForm.addEventListener("submit", function (e) {
         e.preventDefault();
         let testo = modalCommentText.value.trim();
-        if (!testo) {
+        if (!testo && testo.len()==0) {
             alert("Comment cannot be empty!");
             return;
         }

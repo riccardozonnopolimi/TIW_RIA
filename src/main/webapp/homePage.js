@@ -524,6 +524,7 @@ document.addEventListener("DOMContentLoaded", function () {
 					                                    if (updatedImg) {
 					                                        populateModalComments(updatedImg.commenti || []);
 					                                        showAlbumImages(foundAlbum);
+															populateOtherAlbums(otherAlbums);
 					                                    }
 					                                }
 					                            } else {
